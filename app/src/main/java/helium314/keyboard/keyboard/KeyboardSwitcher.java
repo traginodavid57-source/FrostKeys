@@ -1620,6 +1620,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                 mCurrentOrientation == Configuration.ORIENTATION_LANDSCAPE,
                 FoldableUtils.INSTANCE.isFolded());
         if (mLatinIME != null) {
+            mLatinIME.loadSettings();
             FloatingKeyboardManager.Companion.applyFloatingWindowLayout(mLatinIME, mCurrentInputView);
         }
         reloadKeyboard();

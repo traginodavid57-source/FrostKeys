@@ -912,7 +912,7 @@ public class LatinIME extends InputMethodService implements
         mKeyboardSwitcher.showToast(getString(R.string.toast_msg_content_paste_failed), true);
     }
 
-    private void loadSettings() {
+    public void loadSettings() {
         final Locale locale = mRichImm.getCurrentSubtypeLocale();
         final EditorInfo editorInfo = getCurrentInputEditorInfo();
         final InputAttributes inputAttributes = new InputAttributes(

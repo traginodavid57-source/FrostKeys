@@ -3,24 +3,19 @@ package helium314.keyboard.latin
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.inputmethodservice.InputMethodService
-import android.os.Build
 import android.view.Gravity
+import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.ImageButton
-import androidx.core.content.ContextCompat
 import helium314.keyboard.keyboard.KeyboardSwitcher
-import helium314.keyboard.keyboard.KeyboardTheme
 import helium314.keyboard.latin.common.ColorType
-import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.FoldableUtils
-import helium314.keyboard.latin.utils.ResourceUtils
 import helium314.keyboard.latin.utils.prefs
 import kotlin.math.max
 import kotlin.math.min
@@ -32,6 +27,15 @@ class FloatingKeyboardManager {
         const val PREF_FLOATING_SCALE_PREFIX = "floating_keyboard_scale"
         const val PREF_FLOATING_X_PREFIX = "floating_keyboard_x"
         const val PREF_FLOATING_Y_PREFIX = "floating_keyboard_y"
+
+        private const val DEFAULT_BOTTOM_MARGIN_DP = 40f
+        private const val MIN_TOP_MARGIN_DP = 48f
+        private const val MIN_SIDE_MARGIN_DP = 8f
+        private const val MIN_BOTTOM_MARGIN_DP = 24f
+
+        private fun dpToPx(context: Context, dp: Float): Int {
+            return (dp * context.resources.displayMetrics.density + 0.5f).toInt()
+        }
 
         fun isFloatingModeEnabled(context: Context): Boolean {
             val isLandscape = context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -66,20 +70,27 @@ class FloatingKeyboardManager {
             val savedX = Settings.readFloatingKeyboardX(prefs, isLandscape, FoldableUtils.isFolded)
             val savedY = Settings.readFloatingKeyboardY(prefs, isLandscape, FoldableUtils.isFolded)
 
-            val maxX = max(0, screenWidth - keyboardWidth)
-            val maxY = max(0, screenHeight - keyboardHeight)
+            val sideMargin = dpToPx(context, MIN_SIDE_MARGIN_DP)
+            val topMargin = dpToPx(context, MIN_TOP_MARGIN_DP)
+            val bottomMargin = dpToPx(context, MIN_BOTTOM_MARGIN_DP)
+            val defaultBottomMargin = dpToPx(context, DEFAULT_BOTTOM_MARGIN_DP)
+
+            val minX = sideMargin
+            val maxX = max(minX, screenWidth - keyboardWidth - sideMargin)
+            val minY = topMargin
+            val maxY = max(minY, screenHeight - keyboardHeight - bottomMargin)
 
             val finalX = if (savedX < 0) {
-                (screenWidth - keyboardWidth) / 2
+                ((screenWidth - keyboardWidth) / 2).coerceIn(minX, maxX)
             } else {
-                savedX.coerceIn(0, maxX)
+                savedX.coerceIn(minX, maxX)
             }
 
             val finalY = if (savedY < 0) {
-                // Default to ~65% down the screen
-                (screenHeight * 0.65f).toInt().coerceIn(0, maxY)
+                // Default position: floating comfortably above the bottom of the screen with a clean margin
+                (screenHeight - keyboardHeight - defaultBottomMargin).coerceIn(minY, maxY)
             } else {
-                savedY.coerceIn(0, maxY)
+                savedY.coerceIn(minY, maxY)
             }
 
             outPos[0] = finalX
@@ -116,8 +127,10 @@ class FloatingKeyboardManager {
                 val effectiveScale = (baseScale * scale).coerceIn(0.45f, 0.96f)
                 val kbWidth = (screenW * effectiveScale).toInt().coerceIn(min(screenW, (screenW * 0.40f).toInt()), screenW)
 
-                val estimatedHeight = inputView?.measuredHeight.takeIf { it != null && it > 0 }
+                val estimatedHeight = mainFrame?.height?.takeIf { it > 0 }
+                    ?: inputView?.measuredHeight?.takeIf { it > 0 }
                     ?: (screenH * 0.35f).toInt()
+
                 val pos = IntArray(2)
                 getFloatingPosition(service, pos, screenW, screenH, kbWidth, estimatedHeight)
 
@@ -126,6 +139,29 @@ class FloatingKeyboardManager {
                 lp.width = kbWidth
                 lp.height = ViewGroup.LayoutParams.WRAP_CONTENT
                 window.attributes = lp
+
+                // Ensure position is adjusted once the view is measured and real height is known
+                mainFrame?.post {
+                    if (!isFloatingModeEnabled(service)) return@post
+                    val realH = mainFrame.height
+                    if (realH > 0) {
+                        val sideMargin = dpToPx(service, MIN_SIDE_MARGIN_DP)
+                        val topMargin = dpToPx(service, MIN_TOP_MARGIN_DP)
+                        val bottomMargin = dpToPx(service, MIN_BOTTOM_MARGIN_DP)
+                        val currentX = lp.x
+                        val currentY = lp.y
+                        val maxX = max(sideMargin, screenW - kbWidth - sideMargin)
+                        val maxY = max(topMargin, screenH - realH - bottomMargin)
+                        val clampedX = currentX.coerceIn(sideMargin, maxX)
+                        val clampedY = currentY.coerceIn(topMargin, maxY)
+                        if (clampedX != currentX || clampedY != currentY) {
+                            lp.x = clampedX
+                            lp.y = clampedY
+                            window.attributes = lp
+                            saveFloatingPosition(service, clampedX, clampedY)
+                        }
+                    }
+                }
             } else {
                 window.setGravity(Gravity.BOTTOM)
                 lp.gravity = Gravity.BOTTOM
@@ -142,6 +178,7 @@ class FloatingKeyboardManager {
             val controlBar = mainKeyboardFrame.findViewById<View>(R.id.floating_control_bar) ?: return
             val btnDock = controlBar.findViewById<ImageButton>(R.id.btn_floating_dock)
             val dragContainer = controlBar.findViewById<View>(R.id.floating_drag_handle_container)
+            val dragHandlePill = controlBar.findViewById<View>(R.id.floating_drag_handle_pill)
 
             val colors = Settings.getValues()?.mColors
             if (colors != null) {
@@ -173,10 +210,13 @@ class FloatingKeyboardManager {
                 }
             )
 
-            dragContainer?.setOnTouchListener { _, event ->
+            dragContainer?.setOnTouchListener { v, event ->
                 scaleGestureDetector.onTouchEvent(event)
                 if (scaleGestureDetector.isInProgress) {
-                    isDragging = false
+                    if (isDragging) {
+                        isDragging = false
+                        dragHandlePill?.animate()?.scaleX(1.0f)?.scaleY(1.0f)?.setDuration(150)?.start()
+                    }
                     return@setOnTouchListener true
                 }
 
@@ -187,11 +227,21 @@ class FloatingKeyboardManager {
                 val screenH = metrics.heightPixels
                 val kbW = lp.width
                 val kbH = mainKeyboardFrame.height.takeIf { it > 0 } ?: (screenH * 0.35f).toInt()
-                val maxX = max(0, screenW - kbW)
-                val maxY = max(0, screenH - kbH)
+
+                val sideMargin = dpToPx(service, MIN_SIDE_MARGIN_DP)
+                val topMargin = dpToPx(service, MIN_TOP_MARGIN_DP)
+                val bottomMargin = dpToPx(service, MIN_BOTTOM_MARGIN_DP)
+
+                val minX = sideMargin
+                val maxX = max(minX, screenW - kbW - sideMargin)
+                val minY = topMargin
+                val maxY = max(minY, screenH - kbH - bottomMargin)
 
                 when (event.actionMasked) {
                     MotionEvent.ACTION_DOWN -> {
+                        v.parent?.requestDisallowInterceptTouchEvent(true)
+                        mainKeyboardFrame.parent?.requestDisallowInterceptTouchEvent(true)
+
                         val now = System.currentTimeMillis()
                         if (now - lastTapTime < 300) {
                             // Double tap: toggle scale preset (e.g. 0.85 -> 1.0 -> 1.2 -> 0.85)
@@ -213,24 +263,35 @@ class FloatingKeyboardManager {
                         startWindowX = lp.x
                         startWindowY = lp.y
                         isDragging = true
+
+                        // Smooth visual feedback on touch down
+                        dragHandlePill?.animate()?.scaleX(1.15f)?.scaleY(1.25f)?.alpha(0.85f)?.setDuration(120)?.start()
+                        runCatching {
+                            v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                        }
                         true
                     }
                     MotionEvent.ACTION_MOVE -> {
                         if (!isDragging) return@setOnTouchListener true
+                        v.parent?.requestDisallowInterceptTouchEvent(true)
+
                         val dx = (event.rawX - startTouchX).toInt()
                         val dy = (event.rawY - startTouchY).toInt()
 
-                        val newX = (startWindowX + dx).coerceIn(0, maxX)
-                        val newY = (startWindowY + dy).coerceIn(0, maxY)
+                        val newX = (startWindowX + dx).coerceIn(minX, maxX)
+                        val newY = (startWindowY + dy).coerceIn(minY, maxY)
 
-                        lp.x = newX
-                        lp.y = newY
-                        window.attributes = lp
+                        if (newX != lp.x || newY != lp.y) {
+                            lp.x = newX
+                            lp.y = newY
+                            window.attributes = lp
+                        }
                         true
                     }
                     MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                         if (isDragging) {
                             isDragging = false
+                            dragHandlePill?.animate()?.scaleX(1.0f)?.scaleY(1.0f)?.alpha(1.0f)?.setDuration(150)?.start()
                             saveFloatingPosition(service, lp.x, lp.y)
                         }
                         true
