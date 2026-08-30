@@ -144,7 +144,7 @@ class RoundedKeyboardFrameView @JvmOverloads constructor(
             Settings.KEYBOARD_CORNER_RADIUS_MIN_DP,
             Settings.KEYBOARD_CORNER_RADIUS_MAX_DP
         )
-        val radiusDp = if (isFloatingMode) kotlin.math.max(20f, baseRadiusDp) else baseRadiusDp
+        val radiusDp = if (isFloatingMode) maxOf(20f, baseRadiusDp) else baseRadiusDp
         return radiusDp * resources.displayMetrics.density
     }
 
