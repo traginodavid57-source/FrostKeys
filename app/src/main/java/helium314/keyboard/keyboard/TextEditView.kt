@@ -177,7 +177,7 @@ class TextEditView @JvmOverloads constructor(
 
     fun updateThemeColors(colors: Colors) {
         val keyboardTextColor = colors.get(ColorType.KEY_TEXT)
-        val keyboardBgColor = colors.get(ColorType.KEYBOARD_BACKGROUND)
+        val keyboardBgColor = colors.get(ColorType.MAIN_BACKGROUND)
         val keyBgColor = colors.get(ColorType.KEY_BACKGROUND)
         val headerBgColor = colors.get(ColorType.STRIP_BACKGROUND)
 

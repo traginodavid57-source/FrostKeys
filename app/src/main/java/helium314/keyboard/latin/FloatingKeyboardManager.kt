@@ -100,7 +100,6 @@ class FloatingKeyboardManager {
             mainFrame?.isFloatingMode = floating
 
             val controlBar = inputView?.findViewById<View>(R.id.floating_control_bar)
-                ?: inputView?.findViewById<View>(R.id.floating_control_bar_container)
             controlBar?.visibility = if (floating) View.VISIBLE else View.GONE
 
             val metrics = service.resources.displayMetrics
@@ -140,9 +139,7 @@ class FloatingKeyboardManager {
 
         @SuppressLint("ClickableViewAccessibility")
         fun setupFloatingControlBar(service: LatinIME, mainKeyboardFrame: View) {
-            val controlBar = mainKeyboardFrame.findViewById<View>(R.id.floating_control_bar)
-                ?: mainKeyboardFrame.findViewById<View>(R.id.floating_control_bar_container)
-                ?: return
+            val controlBar = mainKeyboardFrame.findViewById<View>(R.id.floating_control_bar) ?: return
             val btnDock = controlBar.findViewById<ImageButton>(R.id.btn_floating_dock)
             val btnResize = controlBar.findViewById<ImageButton>(R.id.btn_floating_resize)
             val dragContainer = controlBar.findViewById<View>(R.id.floating_drag_handle_container)
