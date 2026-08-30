@@ -112,9 +112,9 @@ class FloatingKeyboardManager {
 
                 val scale = getFloatingScale(service)
                 val isLandscape = service.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-                val baseScale = if (isLandscape) 0.55f else 0.75f
-                val effectiveScale = (baseScale * scale).coerceIn(0.40f, 1.0f)
-                val kbWidth = (screenW * effectiveScale).toInt().coerceIn(min(screenW, (screenW * 0.35f).toInt()), screenW)
+                val baseScale = if (isLandscape) 0.58f else 0.84f
+                val effectiveScale = (baseScale * scale).coerceIn(0.45f, 0.96f)
+                val kbWidth = (screenW * effectiveScale).toInt().coerceIn(min(screenW, (screenW * 0.40f).toInt()), screenW)
 
                 val estimatedHeight = inputView?.measuredHeight.takeIf { it != null && it > 0 }
                     ?: (screenH * 0.35f).toInt()
@@ -141,13 +141,11 @@ class FloatingKeyboardManager {
         fun setupFloatingControlBar(service: LatinIME, mainKeyboardFrame: View) {
             val controlBar = mainKeyboardFrame.findViewById<View>(R.id.floating_control_bar) ?: return
             val btnDock = controlBar.findViewById<ImageButton>(R.id.btn_floating_dock)
-            val btnResize = controlBar.findViewById<ImageButton>(R.id.btn_floating_resize)
             val dragContainer = controlBar.findViewById<View>(R.id.floating_drag_handle_container)
 
             val colors = Settings.getValues()?.mColors
             if (colors != null) {
                 btnDock?.let { colors.setColor(it, ColorType.ONE_HANDED_MODE_BUTTON) }
-                btnResize?.let { colors.setColor(it, ColorType.ONE_HANDED_MODE_BUTTON) }
             }
 
             btnDock?.setOnClickListener {
@@ -155,25 +153,33 @@ class FloatingKeyboardManager {
                 KeyboardSwitcher.getInstance().setFloatingModeEnabled(false)
             }
 
-            btnResize?.setOnClickListener {
-                val isLandscape = service.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-                val currentScale = getFloatingScale(service)
-                val newScale = when {
-                    currentScale < 0.85f -> 1.0f
-                    currentScale < 1.15f -> 1.25f
-                    else -> 0.75f
-                }
-                setFloatingScale(service, newScale)
-                KeyboardSwitcher.getInstance().reloadKeyboard()
-            }
-
             var startTouchX = 0f
             var startTouchY = 0f
             var startWindowX = 0
             var startWindowY = 0
             var isDragging = false
+            var lastTapTime = 0L
+
+            val scaleGestureDetector = android.view.ScaleGestureDetector(
+                service,
+                object : android.view.ScaleGestureDetector.SimpleOnScaleGestureListener() {
+                    override fun onScale(detector: android.view.ScaleGestureDetector): Boolean {
+                        val currentScale = getFloatingScale(service)
+                        val newScale = (currentScale * detector.scaleFactor).coerceIn(0.65f, 1.35f)
+                        setFloatingScale(service, newScale)
+                        applyFloatingWindowLayout(service, service.window?.window?.decorView?.findViewById(R.id.main_keyboard_frame))
+                        return true
+                    }
+                }
+            )
 
             dragContainer?.setOnTouchListener { _, event ->
+                scaleGestureDetector.onTouchEvent(event)
+                if (scaleGestureDetector.isInProgress) {
+                    isDragging = false
+                    return@setOnTouchListener true
+                }
+
                 val window = service.window?.window ?: return@setOnTouchListener false
                 val lp = window.attributes ?: return@setOnTouchListener false
                 val metrics = service.resources.displayMetrics
@@ -186,6 +192,22 @@ class FloatingKeyboardManager {
 
                 when (event.actionMasked) {
                     MotionEvent.ACTION_DOWN -> {
+                        val now = System.currentTimeMillis()
+                        if (now - lastTapTime < 300) {
+                            // Double tap: toggle scale preset (e.g. 0.85 -> 1.0 -> 1.2 -> 0.85)
+                            val currentScale = getFloatingScale(service)
+                            val nextScale = when {
+                                currentScale < 0.9f -> 1.0f
+                                currentScale < 1.15f -> 1.22f
+                                else -> 0.85f
+                            }
+                            setFloatingScale(service, nextScale)
+                            KeyboardSwitcher.getInstance().reloadKeyboard()
+                            lastTapTime = 0L
+                            return@setOnTouchListener true
+                        }
+                        lastTapTime = now
+
                         startTouchX = event.rawX
                         startTouchY = event.rawY
                         startWindowX = lp.x

@@ -45,7 +45,8 @@ class KeyboardWrapperView @JvmOverloads constructor(
     }
 
     override fun onApplyWindowInsets(insets: WindowInsets): WindowInsets {
-        val bottomInset = insets.systemWindowInsetBottom
+        val isFloating = FloatingKeyboardManager.isFloatingModeEnabled(context)
+        val bottomInset = if (isFloating) 0 else insets.systemWindowInsetBottom
         // Apply the navigation bar inset as bottom padding on this wrapper,
         // so ALL child panels are pushed above the nav bar uniformly.
         setPadding(paddingLeft, paddingTop, paddingRight, bottomInset)

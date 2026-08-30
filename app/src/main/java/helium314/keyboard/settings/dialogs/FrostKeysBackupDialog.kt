@@ -7,6 +7,7 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.result.ActivityResult
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,8 +21,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -41,10 +44,11 @@ fun FrostKeysBackupDialog(
     val context = LocalContext.current
     var selectedTab by rememberSaveable { mutableIntStateOf(0) } // 0 = Export, 1 = Restore
 
-    // Export state
-    val selectedExportCategories = remember { mutableStateMapOf<BackupCategory, Boolean>() }
-    LaunchedEffect(Unit) {
-        BackupCategory.entries.forEach { selectedExportCategories[it] = true }
+    // Export state - initialized immediately with all categories checked
+    val selectedExportCategories = remember {
+        mutableStateMapOf<BackupCategory, Boolean>().apply {
+            BackupCategory.entries.forEach { put(it, true) }
+        }
     }
 
     // Restore state
@@ -107,13 +111,31 @@ fun FrostKeysBackupDialog(
                     .fillMaxSize()
                     .padding(20.dp)
             ) {
-                // Dialog Title
-                Text(
-                    text = stringResource(R.string.backup_restore_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                // Dialog Header: Title + Close Icon
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.backup_restore_title),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                    IconButton(
+                        onClick = onDismissRequest,
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_close_rounded),
+                            contentDescription = stringResource(R.string.dialog_cancel),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -126,12 +148,26 @@ fun FrostKeysBackupDialog(
                     Tab(
                         selected = selectedTab == 0,
                         onClick = { selectedTab = 0 },
-                        text = { Text(stringResource(R.string.tab_export_customization), fontWeight = FontWeight.SemiBold) }
+                        text = {
+                            Text(
+                                stringResource(R.string.tab_export_customization),
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     )
                     Tab(
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1 },
-                        text = { Text(stringResource(R.string.tab_restore_customization), fontWeight = FontWeight.SemiBold) }
+                        text = {
+                            Text(
+                                stringResource(R.string.tab_restore_customization),
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     )
                 }
 
@@ -160,18 +196,32 @@ fun FrostKeysBackupDialog(
 
                             // Quick Select All / None
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 6.dp),
                                 horizontalArrangement = Arrangement.End
                             ) {
-                                TextButton(onClick = {
-                                    BackupCategory.entries.forEach { selectedExportCategories[it] = true }
-                                }) {
-                                    Text(stringResource(R.string.select_all))
+                                TextButton(
+                                    onClick = {
+                                        BackupCategory.entries.forEach { selectedExportCategories[it] = true }
+                                    },
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        stringResource(R.string.select_all),
+                                        style = MaterialTheme.typography.labelMedium
+                                    )
                                 }
-                                TextButton(onClick = {
-                                    BackupCategory.entries.forEach { selectedExportCategories[it] = false }
-                                }) {
-                                    Text(stringResource(R.string.deselect_all))
+                                TextButton(
+                                    onClick = {
+                                        BackupCategory.entries.forEach { selectedExportCategories[it] = false }
+                                    },
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        stringResource(R.string.deselect_all),
+                                        style = MaterialTheme.typography.labelMedium
+                                    )
                                 }
                             }
 
@@ -198,7 +248,7 @@ fun FrostKeysBackupDialog(
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(vertical = 24.dp),
+                                        .padding(vertical = 36.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Button(
@@ -223,10 +273,12 @@ fun FrostKeysBackupDialog(
                                         colors = CardDefaults.cardColors(
                                             containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
                                         ),
-                                        shape = RoundedCornerShape(12.dp),
-                                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                                        shape = RoundedCornerShape(14.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 12.dp)
                                     ) {
-                                        Column(modifier = Modifier.padding(12.dp)) {
+                                        Column(modifier = Modifier.padding(14.dp)) {
                                             Text(
                                                 text = if (result.isLegacyZip) "Backup ZIP detectado" else "Arquivo FrostKeys (.fsk) válido! ✨",
                                                 style = MaterialTheme.typography.titleMedium,
@@ -234,6 +286,7 @@ fun FrostKeysBackupDialog(
                                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                                             )
                                             if (result.createdAt.isNotEmpty()) {
+                                                Spacer(modifier = Modifier.height(4.dp))
                                                 Text(
                                                     text = "Criado em: ${result.createdAt}",
                                                     style = MaterialTheme.typography.bodySmall,
@@ -250,6 +303,31 @@ fun FrostKeysBackupDialog(
                                     )
 
                                     Spacer(modifier = Modifier.height(8.dp))
+
+                                    // Quick Select All / None for Restore
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 6.dp),
+                                        horizontalArrangement = Arrangement.End
+                                    ) {
+                                        TextButton(
+                                            onClick = {
+                                                result.availableCategories.forEach { selectedRestoreCategories[it] = true }
+                                            },
+                                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(stringResource(R.string.select_all), style = MaterialTheme.typography.labelMedium)
+                                        }
+                                        TextButton(
+                                            onClick = {
+                                                result.availableCategories.forEach { selectedRestoreCategories[it] = false }
+                                            },
+                                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(stringResource(R.string.deselect_all), style = MaterialTheme.typography.labelMedium)
+                                        }
+                                    }
 
                                     result.availableCategories.forEach { category ->
                                         val isChecked = selectedRestoreCategories[category] ?: true
@@ -268,7 +346,8 @@ fun FrostKeysBackupDialog(
                                             selectedFileUri = null
                                             inspectionResult = null
                                         },
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(14.dp)
                                     ) {
                                         Text(stringResource(R.string.button_choose_another_file))
                                     }
@@ -277,8 +356,10 @@ fun FrostKeysBackupDialog(
                                         colors = CardDefaults.cardColors(
                                             containerColor = MaterialTheme.colorScheme.errorContainer
                                         ),
-                                        shape = RoundedCornerShape(12.dp),
-                                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                                        shape = RoundedCornerShape(14.dp),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 12.dp)
                                     ) {
                                         Text(
                                             text = result.errorMessage ?: stringResource(R.string.backup_invalid_format),
@@ -293,7 +374,8 @@ fun FrostKeysBackupDialog(
                                             selectedFileUri = null
                                             inspectionResult = null
                                         },
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(14.dp)
                                     ) {
                                         Text(stringResource(R.string.button_try_again))
                                     }
@@ -303,21 +385,15 @@ fun FrostKeysBackupDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
                 // Bottom Action Buttons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(onClick = onDismissRequest) {
-                        Text(stringResource(R.string.dialog_cancel))
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    if (selectedTab == 0) {
+                if (selectedTab == 0) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         // Share with Friend
                         FilledTonalButton(
                             onClick = {
@@ -331,12 +407,17 @@ fun FrostKeysBackupDialog(
                                     context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_backup_title)))
                                 }
                             },
-                            shape = RoundedCornerShape(12.dp)
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(14.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp)
                         ) {
-                            Text(stringResource(R.string.button_share_friend))
+                            Text(
+                                text = stringResource(R.string.button_share_friend),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.labelLarge
+                            )
                         }
-
-                        Spacer(modifier = Modifier.width(8.dp))
 
                         // Save .fsk File
                         Button(
@@ -354,12 +435,27 @@ fun FrostKeysBackupDialog(
                                 }
                                 fileSaveLauncher.launch(intent)
                             },
-                            shape = RoundedCornerShape(12.dp)
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(14.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 12.dp)
                         ) {
-                            Text(stringResource(R.string.button_save_fsk))
+                            Text(
+                                text = stringResource(R.string.button_save_fsk),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.labelLarge
+                            )
                         }
-                    } else if (inspectionResult?.isValid == true && selectedFileUri != null) {
-                        // Restore Selected
+                    }
+                } else if (inspectionResult?.isValid == true && selectedFileUri != null) {
+                    // Restore Selected
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Button(
                             onClick = {
                                 val activeCats = selectedRestoreCategories.filter { it.value }.keys.toSet()
@@ -384,9 +480,16 @@ fun FrostKeysBackupDialog(
                                     }
                                 }
                             },
-                            shape = RoundedCornerShape(12.dp)
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
                         ) {
-                            Text(stringResource(R.string.button_restore_selected))
+                            Text(
+                                text = stringResource(R.string.button_restore_selected),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.labelLarge
+                            )
                         }
                     }
                 }
@@ -406,28 +509,39 @@ private fun CategoryCheckboxItem(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(14.dp))
             .clickable { onCheckedChange(!checked) },
-        color = if (checked) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.surface
+        shape = RoundedCornerShape(14.dp),
+        color = if (checked) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+        },
+        border = if (checked) {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+        } else {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+        }
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+                .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Checkbox(
                 checked = checked,
                 onCheckedChange = onCheckedChange
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(10.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = description,
                     style = MaterialTheme.typography.bodySmall,
@@ -437,3 +551,4 @@ private fun CategoryCheckboxItem(
         }
     }
 }
+

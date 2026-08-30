@@ -140,10 +140,11 @@ class RoundedKeyboardFrameView @JvmOverloads constructor(
     }
 
     private fun keyboardCornerRadiusPx(): Float {
-        val radiusDp = Settings.readKeyboardCornerRadius(context.prefs()).coerceIn(
-                Settings.KEYBOARD_CORNER_RADIUS_MIN_DP,
-                Settings.KEYBOARD_CORNER_RADIUS_MAX_DP
-            )
+        val baseRadiusDp = Settings.readKeyboardCornerRadius(context.prefs()).coerceIn(
+            Settings.KEYBOARD_CORNER_RADIUS_MIN_DP,
+            Settings.KEYBOARD_CORNER_RADIUS_MAX_DP
+        )
+        val radiusDp = if (isFloatingMode) kotlin.math.max(20f, baseRadiusDp) else baseRadiusDp
         return radiusDp * resources.displayMetrics.density
     }
 
