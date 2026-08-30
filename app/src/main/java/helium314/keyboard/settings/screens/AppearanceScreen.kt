@@ -72,7 +72,6 @@ fun AppearanceScreen(
             Settings.PREF_THEME_DAY_NIGHT else null,
         Settings.PREF_NAVBAR_COLOR,
         if (isFrostedActive) "adjust_frosted_glass_dialog" else null,
-        SettingsWithoutKey.BACKUP_RESTORE,
         SettingsWithoutKey.BACKGROUND_IMAGE,
         SettingsWithoutKey.BACKGROUND_IMAGE_LANDSCAPE,
         Settings.PREF_KEYBOARD_CORNER_RADIUS,
@@ -388,9 +387,6 @@ fun createAppearanceSettings(context: Context) = listOf(
                 }
             }
         )
-    },
-    Setting(context, SettingsWithoutKey.BACKUP_RESTORE, R.string.backup_restore_title) {
-        BackupRestorePreference(it)
     },
 )
 
