@@ -65,13 +65,13 @@ fun FrostKeysBackupDialog(
                     val activeCats = selectedExportCategories.filter { it.value }.keys.toSet()
                     FrostKeysBackupManager.exportBackup(context, os, activeCats)
                 }
-                context.getActivity()?.runOnUiThread {
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
                     Toast.makeText(context, context.getString(R.string.backup_created_success), Toast.LENGTH_LONG).show()
                     isProcessing = false
                     onDismissRequest()
                 }
             } catch (t: Throwable) {
-                context.getActivity()?.runOnUiThread {
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
                     Toast.makeText(context, context.getString(R.string.backup_error, t.localizedMessage), Toast.LENGTH_LONG).show()
                     isProcessing = false
                 }
@@ -84,7 +84,7 @@ fun FrostKeysBackupDialog(
         isProcessing = true
         ExecutorUtils.getBackgroundExecutor(ExecutorUtils.KEYBOARD).execute {
             val result = FrostKeysBackupManager.inspectBackup(context, uri)
-            context.getActivity()?.runOnUiThread {
+            android.os.Handler(android.os.Looper.getMainLooper()).post {
                 inspectionResult = result
                 selectedRestoreCategories.clear()
                 result.availableCategories.forEach { selectedRestoreCategories[it] = true }
@@ -467,13 +467,13 @@ fun FrostKeysBackupDialog(
                                 ExecutorUtils.getBackgroundExecutor(ExecutorUtils.KEYBOARD).execute {
                                     try {
                                         FrostKeysBackupManager.restoreBackup(context, selectedFileUri!!, activeCats)
-                                        context.getActivity()?.runOnUiThread {
+                                        android.os.Handler(android.os.Looper.getMainLooper()).post {
                                             Toast.makeText(context, context.getString(R.string.backup_restored), Toast.LENGTH_LONG).show()
                                             isProcessing = false
                                             onDismissRequest()
                                         }
                                     } catch (t: Throwable) {
-                                        context.getActivity()?.runOnUiThread {
+                                        android.os.Handler(android.os.Looper.getMainLooper()).post {
                                             Toast.makeText(context, context.getString(R.string.restore_error, t.localizedMessage), Toast.LENGTH_LONG).show()
                                             isProcessing = false
                                         }

@@ -395,8 +395,12 @@ object FrostKeysBackupManager {
         LayoutUtilsCustom.onLayoutFileChanged()
         LayoutUtilsCustom.removeMissingLayouts(context)
         SupportedEmojis.load(context)
-        KeyboardSwitcher.getInstance().setThemeNeedsReload()
-        KeyboardSwitcher.getInstance().reloadKeyboard()
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            runCatching {
+                KeyboardSwitcher.getInstance().setThemeNeedsReload()
+                KeyboardSwitcher.getInstance().reloadKeyboard()
+            }
+        }
     }
 
     private fun restorePreferencesJson(

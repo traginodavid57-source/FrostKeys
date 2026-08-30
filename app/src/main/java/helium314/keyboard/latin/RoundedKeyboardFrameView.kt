@@ -46,65 +46,6 @@ class RoundedKeyboardFrameView @JvmOverloads constructor(
     private var cachedRadiusPx = -1f
     private val staticDustOverlay = StaticSparkleDustOverlay()
 
-    private var isPinchScaling = false
-    private var accumulatedScaleFactor = 1.0f
-
-    private fun findInputMethodService(): InputMethodService? {
-        var ctx: Context? = context
-        while (ctx is ContextWrapper) {
-            if (ctx is InputMethodService) return ctx
-            ctx = ctx.baseContext
-        }
-        return null
-    }
-
-    private val pinchScaleGestureDetector by lazy {
-        ScaleGestureDetector(
-            context,
-            object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
-                override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
-                    if (!isFloatingMode) return false
-                    isPinchScaling = true
-                    accumulatedScaleFactor = 1.0f
-                    parent?.requestDisallowInterceptTouchEvent(true)
-                    findViewById<MainKeyboardView>(R.id.keyboard_view)?.cancelAllOngoingEvents()
-                    return true
-                }
-
-                override fun onScale(detector: ScaleGestureDetector): Boolean {
-                    if (!isPinchScaling) return false
-                    val factor = detector.scaleFactor
-                    accumulatedScaleFactor *= factor
-
-                    val currentScale = FloatingKeyboardManager.getFloatingScale(context)
-                    val newScale = (currentScale * factor).coerceIn(0.65f, 1.35f)
-                    FloatingKeyboardManager.setFloatingScale(context, newScale)
-
-                    // Hardware accelerated real-time feedback during pinch
-                    pivotX = detector.focusX
-                    pivotY = detector.focusY
-                    scaleX = accumulatedScaleFactor.coerceIn(0.75f, 1.25f)
-                    scaleY = scaleX
-                    return true
-                }
-
-                override fun onScaleEnd(detector: ScaleGestureDetector) {
-                    if (!isPinchScaling) return
-                    isPinchScaling = false
-                    scaleX = 1.0f
-                    scaleY = 1.0f
-                    runCatching {
-                        performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                    }
-                    findInputMethodService()?.let { service ->
-                        FloatingKeyboardManager.applyFloatingWindowLayout(service, this@RoundedKeyboardFrameView)
-                    }
-                    KeyboardSwitcher.getInstance().reloadKeyboard()
-                }
-            }
-        )
-    }
-
     var isFloatingMode: Boolean = false
         set(value) {
             if (field != value) {
@@ -154,34 +95,6 @@ class RoundedKeyboardFrameView @JvmOverloads constructor(
         }
     }
 
-    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-        if (isFloatingMode && ev.pointerCount >= 2) {
-            pinchScaleGestureDetector.onTouchEvent(ev)
-            if (pinchScaleGestureDetector.isInProgress || isPinchScaling) {
-                return true
-            }
-        }
-        return super.onInterceptTouchEvent(ev)
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (isFloatingMode) {
-            if (event.pointerCount >= 2 || isPinchScaling) {
-                pinchScaleGestureDetector.onTouchEvent(event)
-                if (pinchScaleGestureDetector.isInProgress || isPinchScaling) {
-                    if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
-                        isPinchScaling = false
-                        scaleX = 1.0f
-                        scaleY = 1.0f
-                    }
-                    return true
-                }
-            }
-        }
-        return super.onTouchEvent(event)
-    }
-
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
         context.prefs().registerOnSharedPreferenceChangeListener(prefListener)
@@ -214,11 +127,15 @@ class RoundedKeyboardFrameView @JvmOverloads constructor(
             return
         }
 
-        updateClipPath(radiusPx)
-        val saveCount = canvas.save()
-        canvas.clipPath(clipPath)
-        super.draw(canvas)
-        canvas.restoreToCount(saveCount)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && clipToOutline) {
+            super.draw(canvas)
+        } else {
+            updateClipPath(radiusPx)
+            val saveCount = canvas.save()
+            canvas.clipPath(clipPath)
+            super.draw(canvas)
+            canvas.restoreToCount(saveCount)
+        }
     }
 
     override fun dispatchDraw(canvas: Canvas) {

@@ -195,31 +195,7 @@ class FloatingKeyboardManager {
             var startWindowX = 0
             var startWindowY = 0
             var isDragging = false
-            var lastTapTime = 0L
-
-            val scaleGestureDetector = android.view.ScaleGestureDetector(
-                service,
-                object : android.view.ScaleGestureDetector.SimpleOnScaleGestureListener() {
-                    override fun onScale(detector: android.view.ScaleGestureDetector): Boolean {
-                        val currentScale = getFloatingScale(service)
-                        val newScale = (currentScale * detector.scaleFactor).coerceIn(0.65f, 1.35f)
-                        setFloatingScale(service, newScale)
-                        applyFloatingWindowLayout(service, service.window?.window?.decorView?.findViewById(R.id.main_keyboard_frame))
-                        return true
-                    }
-                }
-            )
-
             dragContainer?.setOnTouchListener { v, event ->
-                scaleGestureDetector.onTouchEvent(event)
-                if (scaleGestureDetector.isInProgress) {
-                    if (isDragging) {
-                        isDragging = false
-                        dragHandlePill?.animate()?.scaleX(1.0f)?.scaleY(1.0f)?.setDuration(150)?.start()
-                    }
-                    return@setOnTouchListener true
-                }
-
                 val window = service.window?.window ?: return@setOnTouchListener false
                 val lp = window.attributes ?: return@setOnTouchListener false
                 val metrics = service.resources.displayMetrics
@@ -244,10 +220,10 @@ class FloatingKeyboardManager {
 
                         val now = System.currentTimeMillis()
                         if (now - lastTapTime < 300) {
-                            // Double tap: toggle scale preset (e.g. 0.85 -> 1.0 -> 1.2 -> 0.85)
+                            // Double tap: toggle scale preset (e.g. 0.85 -> 1.0 -> 1.22 -> 0.85)
                             val currentScale = getFloatingScale(service)
                             val nextScale = when {
-                                currentScale < 0.9f -> 1.0f
+                                currentScale < 0.92f -> 1.0f
                                 currentScale < 1.15f -> 1.22f
                                 else -> 0.85f
                             }
