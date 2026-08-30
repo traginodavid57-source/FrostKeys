@@ -2,20 +2,28 @@
 
 package helium314.keyboard.latin
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.content.ContextWrapper
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Outline
 import android.graphics.Path
 import android.graphics.RectF
+import android.inputmethodservice.InputMethodService
 import android.os.Build
 import android.util.AttributeSet
+import android.view.HapticFeedbackConstants
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.view.View
 import android.view.ViewOutlineProvider
 import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
+import helium314.keyboard.keyboard.KeyboardSwitcher
 import helium314.keyboard.keyboard.KeyboardTheme
+import helium314.keyboard.keyboard.MainKeyboardView
 import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.prefs
@@ -35,6 +43,66 @@ class RoundedKeyboardFrameView @JvmOverloads constructor(
 
     private var cachedRadiusPx = -1f
     private val staticDustOverlay = StaticSparkleDustOverlay()
+
+    private var isPinchScaling = false
+    private var accumulatedScaleFactor = 1.0f
+
+    private fun findInputMethodService(): InputMethodService? {
+        var ctx: Context? = context
+        while (ctx is ContextWrapper) {
+            if (ctx is InputMethodService) return ctx
+            ctx = ctx.baseContext
+        }
+        return null
+    }
+
+    private val pinchScaleGestureDetector by lazy {
+        ScaleGestureDetector(
+            context,
+            object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+                override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
+                    if (!isFloatingMode) return false
+                    isPinchScaling = true
+                    accumulatedScaleFactor = 1.0f
+                    parent?.requestDisallowInterceptTouchEvent(true)
+                    findViewById<MainKeyboardView>(R.id.keyboard_view)?.cancelAllOngoingEvents()
+                    return true
+                }
+
+                override fun onScale(detector: ScaleGestureDetector): Boolean {
+                    if (!isPinchScaling) return false
+                    val factor = detector.scaleFactor
+                    accumulatedScaleFactor *= factor
+
+                    val currentScale = FloatingKeyboardManager.getFloatingScale(context)
+                    val newScale = (currentScale * factor).coerceIn(0.65f, 1.35f)
+                    FloatingKeyboardManager.setFloatingScale(context, newScale)
+
+                    // Hardware accelerated real-time feedback during pinch
+                    pivotX = detector.focusX
+                    pivotY = detector.focusY
+                    scaleX = accumulatedScaleFactor.coerceIn(0.75f, 1.25f)
+                    scaleY = scaleX
+                    return true
+                }
+
+                override fun onScaleEnd(detector: ScaleGestureDetector) {
+                    if (!isPinchScaling) return
+                    isPinchScaling = false
+                    scaleX = 1.0f
+                    scaleY = 1.0f
+                    runCatching {
+                        performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+                    }
+                    findInputMethodService()?.let { service ->
+                        FloatingKeyboardManager.applyFloatingWindowLayout(service, this@RoundedKeyboardFrameView)
+                    }
+                    KeyboardSwitcher.getInstance().reloadKeyboard()
+                }
+            }
+        )
+    }
+
     var isFloatingMode: Boolean = false
         set(value) {
             if (field != value) {
@@ -82,6 +150,34 @@ class RoundedKeyboardFrameView @JvmOverloads constructor(
             }
             clipToOutline = true
         }
+    }
+
+    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+        if (isFloatingMode && ev.pointerCount >= 2) {
+            pinchScaleGestureDetector.onTouchEvent(ev)
+            if (pinchScaleGestureDetector.isInProgress || isPinchScaling) {
+                return true
+            }
+        }
+        return super.onInterceptTouchEvent(ev)
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (isFloatingMode) {
+            if (event.pointerCount >= 2 || isPinchScaling) {
+                pinchScaleGestureDetector.onTouchEvent(event)
+                if (pinchScaleGestureDetector.isInProgress || isPinchScaling) {
+                    if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
+                        isPinchScaling = false
+                        scaleX = 1.0f
+                        scaleY = 1.0f
+                    }
+                    return true
+                }
+            }
+        }
+        return super.onTouchEvent(event)
     }
 
     override fun onAttachedToWindow() {

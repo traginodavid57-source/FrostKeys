@@ -240,6 +240,19 @@ public final class EmojiPageKeyboardView extends KeyboardView implements
             }
         });
         window.showAtLocation(rootView, Gravity.NO_GRAVITY, popupX, popupY);
+
+        container.setAlpha(0f);
+        container.setScaleX(0.72f);
+        container.setScaleY(0.72f);
+        container.setPivotX(popupWidth / 2f);
+        container.setPivotY((float) popupHeight);
+        container.animate()
+                .alpha(1f)
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(140)
+                .setInterpolator(new android.view.animation.OvershootInterpolator(1.2f))
+                .start();
     }
 
     private int getClampedPopupX(final View rootView, final int popupX, final int popupWidth) {

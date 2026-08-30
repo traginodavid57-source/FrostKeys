@@ -180,6 +180,19 @@ class MoreSuggestionsView @JvmOverloads constructor(
             }
         }
         window.showAtLocation(anchor.rootView, Gravity.NO_GRAVITY, popupX, popupY)
+
+        container.alpha = 0f
+        container.scaleX = 0.72f
+        container.scaleY = 0.72f
+        container.pivotX = container.measuredWidth / 2f
+        container.pivotY = container.measuredHeight.toFloat()
+        container.animate()
+            .alpha(1f)
+            .scaleX(1f)
+            .scaleY(1f)
+            .setDuration(140)
+            .setInterpolator(android.view.animation.OvershootInterpolator(1.2f))
+            .start()
     }
 
     private fun dismissFloatingPopup() {

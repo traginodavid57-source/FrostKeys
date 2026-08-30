@@ -720,6 +720,20 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
             }
         });
         window.showAtLocation(getRootView(), Gravity.NO_GRAVITY, popupX, popupY);
+
+        // Smooth pop-in animation for more-keys / accents popup
+        container.setAlpha(0f);
+        container.setScaleX(0.72f);
+        container.setScaleY(0.72f);
+        container.setPivotX(container.getMeasuredWidth() / 2f);
+        container.setPivotY((float) container.getMeasuredHeight());
+        container.animate()
+                .alpha(1f)
+                .scaleX(1f)
+                .scaleY(1f)
+                .setDuration(140)
+                .setInterpolator(new android.view.animation.OvershootInterpolator(1.2f))
+                .start();
     }
 
     public boolean isShowingPopupKeysPanel() {
