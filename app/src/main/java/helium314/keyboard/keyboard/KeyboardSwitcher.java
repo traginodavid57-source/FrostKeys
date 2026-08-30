@@ -91,6 +91,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
     private ClipboardHistoryView mClipboardHistoryView;
     private AiWritingToolsView mAiWritingToolsView;
     private AccessPointMenuView mAccessPointMenuView;
+    private TextEditView mTextEditView;
     private TextView mFakeToastView;
     private HorizontalScrollView mPersistentEmojiRowScroll;
     private LinearLayout mPersistentEmojiRowContainer;
@@ -289,6 +290,8 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             mKlipyPalettesView.setAlpha(1f);
         if (mAccessPointMenuView != null)
             mAccessPointMenuView.setAlpha(1f);
+        if (mTextEditView != null)
+            mTextEditView.setAlpha(1f);
     }
 
     private void transitionToPanel(final View targetPanel, final Runnable action) {
@@ -1086,6 +1089,9 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         if (mAccessPointMenuView != null) {
             mAccessPointMenuView.setVisibility(View.GONE);
         }
+        if (mTextEditView != null) {
+            mTextEditView.setVisibility(View.GONE);
+        }
         if (mSuggestionStripView != null) {
             mSuggestionStripView.setAccessPointMenuOpen(false);
         }
@@ -1125,6 +1131,9 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                 }
                 if (mAccessPointMenuView != null) {
                     mAccessPointMenuView.setVisibility(View.GONE);
+                }
+                if (mTextEditView != null) {
+                    mTextEditView.setVisibility(View.GONE);
                 }
                 if (mSuggestionStripView != null) {
                     mSuggestionStripView.setAccessPointMenuOpen(false);
@@ -1168,6 +1177,9 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                 if (mAccessPointMenuView != null) {
                     mAccessPointMenuView.setVisibility(View.GONE);
                 }
+                if (mTextEditView != null) {
+                    mTextEditView.setVisibility(View.GONE);
+                }
                 if (mSuggestionStripView != null) {
                     mSuggestionStripView.setAccessPointMenuOpen(false);
                 }
@@ -1209,6 +1221,9 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                 mClipboardStripScrollView.setVisibility(View.GONE);
                 if (mAccessPointMenuView != null) {
                     mAccessPointMenuView.setVisibility(View.GONE);
+                }
+                if (mTextEditView != null) {
+                    mTextEditView.setVisibility(View.GONE);
                 }
                 if (mSuggestionStripView != null) {
                     mSuggestionStripView.setAccessPointMenuOpen(false);
@@ -1253,6 +1268,9 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                 if (mAccessPointMenuView != null) {
                     mAccessPointMenuView.setVisibility(View.GONE);
                 }
+                if (mTextEditView != null) {
+                    mTextEditView.setVisibility(View.GONE);
+                }
                 if (mSuggestionStripView != null) {
                     mSuggestionStripView.setAccessPointMenuOpen(false);
                 }
@@ -1280,6 +1298,9 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                     mAiWritingToolsView.setVisibility(View.GONE);
                     mAiWritingToolsView.onClose();
                 }
+                if (mTextEditView != null) {
+                    mTextEditView.setVisibility(View.GONE);
+                }
                 mEmojiTabStripView.setVisibility(View.GONE);
                 mClipboardStripScrollView.setVisibility(View.GONE);
 
@@ -1294,6 +1315,49 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                 }
                 updatePersistentEmojiRow();
                 setKeyboardPanelOffsets(false);
+                if (mCurrentInputView != null)
+                    mCurrentInputView.requestLayout();
+            }
+        });
+    }
+
+    public void setTextEditKeyboard() {
+        if (DEBUG_ACTION) {
+            Log.d(TAG, "setTextEditKeyboard");
+        }
+        transitionToPanel(mTextEditView, new Runnable() {
+            @Override
+            public void run() {
+                updatePersistentEmojiRow();
+                mMainKeyboardFrame.setVisibility(View.VISIBLE);
+                mKeyboardView.setVisibility(View.GONE);
+                mEmojiPalettesView.setVisibility(View.GONE);
+                mClipboardHistoryView.setVisibility(View.GONE);
+                if (mAiWritingToolsView != null) {
+                    mAiWritingToolsView.setVisibility(View.GONE);
+                    mAiWritingToolsView.onClose();
+                }
+                if (mAccessPointMenuView != null) {
+                    mAccessPointMenuView.setVisibility(View.GONE);
+                }
+                if (mKlipyPalettesView != null) {
+                    mKlipyPalettesView.setVisibility(View.GONE);
+                }
+                mEmojiTabStripView.setVisibility(View.GONE);
+                mClipboardStripScrollView.setVisibility(View.GONE);
+
+                if (mTextEditView != null) {
+                    mTextEditView.onOpen();
+                    mTextEditView.setVisibility(View.VISIBLE);
+                }
+                mStripContainer.setVisibility(View.VISIBLE);
+                if (mSuggestionStripView != null) {
+                    mSuggestionStripView.setVisibility(View.VISIBLE);
+                    mSuggestionStripView.setAccessPointMenuOpen(false);
+                    mSuggestionStripView.showPinnedToolbarKeys();
+                }
+                setKeyboardPanelOffsets(false);
+                updatePersistentEmojiRow();
                 if (mCurrentInputView != null)
                     mCurrentInputView.requestLayout();
             }
@@ -1362,6 +1426,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         AI_TOOLS(KeyboardId.ELEMENT_AI_TOOLS),
         ACCESS_POINT(-1),
         KLIPY(-1),
+        TEXT_EDIT(-1),
         OTHER(-1);
 
         final int mKeyboardId;
@@ -1373,7 +1438,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
 
     public KeyboardSwitchState getKeyboardSwitchState() {
         boolean hidden = !isShowingEmojiPalettes() && !isShowingClipboardHistory() && !isShowingAiWritingTools()
-                && !isShowingAccessPointMenu() && !isShowingKlipyPalettes()
+                && !isShowingAccessPointMenu() && !isShowingKlipyPalettes() && !isShowingTextEdit()
                 && (mKeyboardLayoutSet == null
                         || mKeyboardView == null
                         || !mKeyboardView.isShown());
@@ -1389,6 +1454,8 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             return KeyboardSwitchState.ACCESS_POINT;
         } else if (isShowingKlipyPalettes()) {
             return KeyboardSwitchState.KLIPY;
+        } else if (isShowingTextEdit()) {
+            return KeyboardSwitchState.TEXT_EDIT;
         } else if (isShowingKeyboardId(KeyboardId.ELEMENT_SYMBOLS_SHIFTED)) {
             return KeyboardSwitchState.SYMBOLS_SHIFTED;
         }
@@ -1399,7 +1466,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         KeyboardSwitchState currentState = getKeyboardSwitchState();
         Log.w(TAG, "onToggleKeyboard() : Current = " + currentState + " : Toggle = " + toggleState);
         if (currentState == toggleState) {
-            if (toggleState == KeyboardSwitchState.ACCESS_POINT) {
+            if (toggleState == KeyboardSwitchState.ACCESS_POINT || toggleState == KeyboardSwitchState.TEXT_EDIT) {
                 setAlphabetKeyboard();
             } else {
                 mLatinIME.stopShowingInputView();
@@ -1416,9 +1483,12 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
                 setAiToolsKeyboard();
             } else if (toggleState == KeyboardSwitchState.KLIPY) {
                 setKlipyKeyboard();
+            } else if (toggleState == KeyboardSwitchState.TEXT_EDIT) {
+                setTextEditKeyboard();
             } else if (toggleState == KeyboardSwitchState.ACCESS_POINT) {
                 if (currentState == KeyboardSwitchState.CLIPBOARD || currentState == KeyboardSwitchState.EMOJI
-                        || currentState == KeyboardSwitchState.AI_TOOLS || currentState == KeyboardSwitchState.KLIPY) {
+                        || currentState == KeyboardSwitchState.AI_TOOLS || currentState == KeyboardSwitchState.KLIPY
+                        || currentState == KeyboardSwitchState.TEXT_EDIT) {
                     Log.w(TAG, "Ignoring ACCESS_POINT toggle because current state is " + currentState);
                     return;
                 }
@@ -1689,9 +1759,13 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         return mKlipyPalettesView != null && mKlipyPalettesView.getVisibility() == View.VISIBLE;
     }
 
+    public boolean isShowingTextEdit() {
+        return mTextEditView != null && mTextEditView.getVisibility() == View.VISIBLE;
+    }
+
     public boolean isShowingPopupKeysPanel() {
         if (isShowingEmojiPalettes() || isShowingClipboardHistory() || isShowingAiWritingTools()
-                || isShowingAccessPointMenu() || isShowingKlipyPalettes()) {
+                || isShowingAccessPointMenu() || isShowingKlipyPalettes() || isShowingTextEdit()) {
             return false;
         }
         return mKeyboardView != null && mKeyboardView.isShowingPopupKeysPanel();
@@ -1713,6 +1787,10 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         return mAccessPointMenuView;
     }
 
+    public TextEditView getTextEditView() {
+        return mTextEditView;
+    }
+
     public View getVisibleKeyboardView() {
         if (isShowingEmojiPalettes()) {
             return mEmojiPalettesView;
@@ -1724,6 +1802,8 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
             return mAccessPointMenuView;
         } else if (isShowingKlipyPalettes()) {
             return mKlipyPalettesView;
+        } else if (isShowingTextEdit()) {
+            return mTextEditView;
         }
         return mKeyboardView;
     }
@@ -1822,6 +1902,7 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         mAiWritingToolsView = mCurrentInputView.findViewById(R.id.ai_writing_tools_view);
         mKlipyPalettesView = mCurrentInputView.findViewById(R.id.klipy_palettes_view);
         mAccessPointMenuView = mCurrentInputView.findViewById(R.id.access_point_menu_view);
+        mTextEditView = mCurrentInputView.findViewById(R.id.text_edit_view);
         mFakeToastView = mCurrentInputView.findViewById(R.id.fakeToast);
 
         mKeyboardViewWrapper = mCurrentInputView.findViewById(R.id.keyboard_view_wrapper);
@@ -1846,6 +1927,9 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         }
         if (mAccessPointMenuView != null) {
             mAccessPointMenuView.setKeyboardActionListener(mLatinIME.mKeyboardActionListener);
+        }
+        if (mTextEditView != null) {
+            mTextEditView.setKeyboardActionListener(mLatinIME.mKeyboardActionListener);
         }
         mEmojiTabStripView = mCurrentInputView.findViewById(R.id.emoji_tab_strip_container);
         mClipboardStripView = mCurrentInputView.findViewById(R.id.clipboard_strip);
@@ -2124,6 +2208,11 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         // Update KlipyPalettesView keys
         if (mKlipyPalettesView != null) {
             mKlipyPalettesView.updateThemeColors(colors);
+        }
+
+        // Update TextEditView keys
+        if (mTextEditView != null) {
+            mTextEditView.updateThemeColors(colors);
         }
 
         // 4. Update the soft window background blur radius

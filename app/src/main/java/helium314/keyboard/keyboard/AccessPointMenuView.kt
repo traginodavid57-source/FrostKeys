@@ -144,7 +144,12 @@ class AccessPointMenuView @JvmOverloads constructor(
             tile.setOnClickListener {
                 AudioAndHapticFeedbackManager.getInstance().performHapticAndAudioFeedback(helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode.NOT_SPECIFIED, tile, HapticEvent.KEY_PRESS)
                 if (key == ToolbarKey.TEXT_EDIT) {
-                    showTextEditPopup(tile)
+                    KeyboardSwitcher.getInstance().onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.TEXT_EDIT)
+                    return@setOnClickListener
+                }
+                if (key == ToolbarKey.FLOATING) {
+                    KeyboardSwitcher.getInstance().toggleFloatingMode()
+                    KeyboardSwitcher.getInstance().setAlphabetKeyboard()
                     return@setOnClickListener
                 }
                 val code = getCodeForToolbarKey(key)
@@ -157,7 +162,8 @@ class AccessPointMenuView @JvmOverloads constructor(
                     code != helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode.NUMPAD &&
                     code != helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode.GIFS &&
                     code != helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode.STICKERS &&
-                    code != helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode.RESIZE_KEYBOARD) {
+                    code != helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode.RESIZE_KEYBOARD &&
+                    code != helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode.TEXT_EDIT) {
                     KeyboardSwitcher.getInstance().setAlphabetKeyboard()
                 }
             }
@@ -239,77 +245,6 @@ class AccessPointMenuView @JvmOverloads constructor(
 
             grid.addView(tile)
         }
-    }
-
-    /** Groups the individual text-editing actions (undo/redo/select/copy/cut/paste/arrows) behind
-     *  a single "Edit text" tile, similar to Gboard's edit bubble, instead of leaving them
-     *  scattered across the main access menu grid. */
-    private fun showTextEditPopup(anchor: View) {
-        val editActions = listOf(
-            ToolbarKey.SELECT_WORD, ToolbarKey.SELECT_ALL, ToolbarKey.CUT, ToolbarKey.COPY,
-            ToolbarKey.PASTE, ToolbarKey.UNDO, ToolbarKey.REDO, ToolbarKey.LEFT, ToolbarKey.RIGHT
-        )
-        val inflater = LayoutInflater.from(context)
-        val popupContent = inflater.inflate(R.layout.text_edit_popup, null, false)
-        val popupGrid = popupContent.findViewById<GridLayout>(R.id.text_edit_grid)
-        val colors = Settings.getValues().mColors
-
-        (popupContent.background as? android.graphics.drawable.GradientDrawable)?.let {
-            colors.setColor(it, ColorType.KEY_BACKGROUND)
-        }
-
-        val popupWindow = android.widget.PopupWindow(
-            popupContent,
-            android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
-            android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
-            true
-        )
-        popupWindow.isOutsideTouchable = true
-        popupWindow.elevation = 12f
-
-        for (key in editActions) {
-            val tile = inflater.inflate(R.layout.menu_tile_item, popupGrid, false)
-            val iconView = tile.findViewById<ImageButton>(R.id.menu_tile_icon)
-            val labelView = tile.findViewById<TextView>(R.id.menu_tile_label)
-            val keyboardTextColor = colors.get(helium314.keyboard.latin.common.ColorType.KEY_TEXT)
-
-            var drawable: Drawable? = null
-            try {
-                drawable = KeyboardIconsSet.instance.getNewDrawable(key.name, context)
-            } catch (_: Exception) { }
-            applyKeyTextIcon(iconView, drawable, keyboardTextColor)
-
-            labelView.text = key.name.lowercase().getStringResourceOrName("", context)
-            labelView.setTextColor(keyboardTextColor)
-            KeyboardTypeface.applyToTextView(labelView)
-            iconView.isClickable = false
-            iconView.isFocusable = false
-
-            tile.setOnClickListener {
-                AudioAndHapticFeedbackManager.getInstance().performHapticAndAudioFeedback(
-                    helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode.NOT_SPECIFIED, tile, HapticEvent.KEY_PRESS
-                )
-                val code = getCodeForToolbarKey(key)
-                if (code != helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode.UNSPECIFIED) {
-                    keyboardActionListener.onCodeInput(code, Constants.SUGGESTION_STRIP_COORDINATE, Constants.SUGGESTION_STRIP_COORDINATE, false)
-                }
-                popupWindow.dismiss()
-            }
-            popupGrid.addView(tile)
-        }
-
-        val anchorLocation = IntArray(2)
-        anchor.getLocationInWindow(anchorLocation)
-        popupContent.measure(
-            android.view.View.MeasureSpec.UNSPECIFIED,
-            android.view.View.MeasureSpec.UNSPECIFIED
-        )
-        val popupHeight = popupContent.measuredHeight
-        // Show the popup above the tapped tile so it doesn't get covered by the on-screen keyboard.
-        popupWindow.showAtLocation(
-            anchor, android.view.Gravity.NO_GRAVITY,
-            anchorLocation[0], anchorLocation[1] - popupHeight
-        )
     }
 
     private fun onPinnedKeyDropFromStrip(target: View, event: DragEvent): Boolean {

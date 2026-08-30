@@ -119,7 +119,7 @@ fun getCodeForToolbarKey(key: ToolbarKey) = Settings.getInstance().getCustomTool
     GIFS -> KeyCode.GIFS
     STICKERS -> KeyCode.STICKERS
     RESIZE -> KeyCode.RESIZE_KEYBOARD
-    TEXT_EDIT -> KeyCode.UNSPECIFIED
+    TEXT_EDIT -> KeyCode.TEXT_EDIT
     FLOATING -> KeyCode.TOGGLE_FLOATING_MODE
 }
 

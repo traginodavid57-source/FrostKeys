@@ -75,6 +75,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone" />
+        <helium314.keyboard.keyboard.TextEditView
+            android:id="@+id/text_edit_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
 
         <ImageButton
             android:id="@+id/btn_stop_one_handed_mode"
@@ -106,6 +111,7 @@
     </helium314.keyboard.latin.KeyboardWrapperView>
 
     <include
+        android:id="@+id/floating_control_bar"
         layout="@layout/floating_control_bar" />
 
 </helium314.keyboard.latin.RoundedKeyboardFrameView>

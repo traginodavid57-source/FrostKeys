@@ -1670,7 +1670,7 @@ public class LatinIME extends InputMethodService implements
         if (FloatingKeyboardManager.Companion.isFloatingModeEnabled(this)) {
             outInsets.contentTopInsets = mInputView.getHeight();
             outInsets.visibleTopInsets = mInputView.getHeight();
-            outInsets.touchableInsets = InputMethodService.Insets.TOUCHABLE_INSETS_CONTENT;
+            outInsets.touchableInsets = InputMethodService.Insets.TOUCHABLE_INSETS_FRAME;
             if (mInsetsUpdater != null) mInsetsUpdater.setInsets(outInsets);
             return;
         }
@@ -1683,6 +1683,10 @@ public class LatinIME extends InputMethodService implements
                 visibleKeyboardView = mKeyboardSwitcher.getClipboardHistoryView();
             } else if (mKeyboardSwitcher.getAccessPointMenuView() != null && mKeyboardSwitcher.getAccessPointMenuView().getVisibility() == View.VISIBLE) {
                 visibleKeyboardView = mKeyboardSwitcher.getAccessPointMenuView();
+            } else if (mKeyboardSwitcher.getAiWritingToolsView() != null && mKeyboardSwitcher.getAiWritingToolsView().getVisibility() == View.VISIBLE) {
+                visibleKeyboardView = mKeyboardSwitcher.getAiWritingToolsView();
+            } else if (mKeyboardSwitcher.getTextEditView() != null && mKeyboardSwitcher.getTextEditView().getVisibility() == View.VISIBLE) {
+                visibleKeyboardView = mKeyboardSwitcher.getTextEditView();
             }
         }
 
@@ -1886,7 +1890,8 @@ public class LatinIME extends InputMethodService implements
         if (event.getKeyCode() == KeyCode.ALPHA) {
             final KeyboardSwitcher switcher = KeyboardSwitcher.getInstance();
             if (switcher.isShowingEmojiPalettes() || switcher.isShowingKlipyPalettes()
-                    || switcher.isShowingClipboardHistory() || switcher.isShowingAiWritingTools()) {
+                    || switcher.isShowingClipboardHistory() || switcher.isShowingAiWritingTools()
+                    || switcher.isShowingTextEdit()) {
                 switcher.setAlphabetKeyboard();
                 return;
             }
@@ -1896,6 +1901,14 @@ public class LatinIME extends InputMethodService implements
         }
         if (event.getKeyCode() == KeyCode.AI_TOOLS || event.getKeyCode() == -214) {
             KeyboardSwitcher.getInstance().onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.AI_TOOLS);
+            return;
+        }
+        if (event.getKeyCode() == KeyCode.TEXT_EDIT) {
+            KeyboardSwitcher.getInstance().onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.TEXT_EDIT);
+            return;
+        }
+        if (event.getKeyCode() == KeyCode.TOGGLE_FLOATING_MODE) {
+            KeyboardSwitcher.getInstance().toggleFloatingMode();
             return;
         }
         if (event.getKeyCode() == KeyCode.GIFS) {
@@ -2251,6 +2264,10 @@ public class LatinIME extends InputMethodService implements
                 }
                 return true;
             }
+        }
+        if (keyCode == KeyEvent.KEYCODE_BACK && mKeyboardSwitcher.isShowingTextEdit()) {
+            mKeyboardSwitcher.setAlphabetKeyboard();
+            return true;
         }
         if (mKeyboardActionListener.onKeyUp(keyCode, keyEvent))
             return true;
