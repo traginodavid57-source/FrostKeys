@@ -19,6 +19,8 @@ import helium314.keyboard.latin.transferOldPinnedClips
 import helium314.keyboard.latin.utils.DeviceProtectedUtils
 import helium314.keyboard.latin.utils.LayoutUtilsCustom
 import helium314.keyboard.latin.utils.Log
+import helium314.keyboard.latin.utils.PreferenceUtils
+import helium314.keyboard.latin.utils.PrefType
 import helium314.keyboard.latin.utils.SubtypeSettings
 import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.latin.utils.protectedPrefs
@@ -199,7 +201,7 @@ object FrostKeysBackupManager {
                 val key = entry.key ?: return@filter false
                 selectedCategories.any { cat -> isKeyMatchingCategory(key, cat) }
             }
-            val prefsJson = mapToJsonObject(filteredPrefs)
+            val prefsJson = mapToTypedJsonObject(filteredPrefs)
             zip.putNextEntry(ZipEntry(PREFS_FILE_NAME))
             zip.write(prefsJson.toString(2).toByteArray(Charsets.UTF_8))
             zip.closeEntry()
@@ -210,7 +212,7 @@ object FrostKeysBackupManager {
                 val key = entry.key ?: return@filter false
                 selectedCategories.any { cat -> isKeyMatchingCategory(key, cat) }
             }
-            val protectedJson = mapToJsonObject(filteredProtected)
+            val protectedJson = mapToTypedJsonObject(filteredProtected)
             zip.putNextEntry(ZipEntry(PROTECTED_PREFS_FILE_NAME))
             zip.write(protectedJson.toString(2).toByteArray(Charsets.UTF_8))
             zip.closeEntry()
@@ -381,6 +383,9 @@ object FrostKeysBackupManager {
             Database.copyFromDb(restoredDb, context)
         }
 
+        PreferenceUtils.sanitizePreferences(context.prefs())
+        PreferenceUtils.sanitizePreferences(context.protectedPrefs())
+
         // Post-restore refresh
         checkVersionUpgrade(context)
         transferOldPinnedClips(context)
@@ -401,33 +406,110 @@ object FrostKeysBackupManager {
     ) {
         try {
             val json = JSONObject(jsonString)
+            val isTypedV2 = json.optString("__format__") == "typed_v2" && json.has("entries")
+            val targetObject = if (isTypedV2) json.getJSONObject("entries") else json
+
             prefs.edit {
-                val keys = json.keys()
+                val keys = targetObject.keys()
                 while (keys.hasNext()) {
                     val key = keys.next()
+                    if (key == "__format__" || key == "entries") continue
                     if (categoriesToRestore.any { isKeyMatchingCategory(key, it) }) {
-                        val value = json.get(key)
-                        when (value) {
-                            is Boolean -> putBoolean(key, value)
-                            is Int -> putInt(key, value)
-                            is Long -> putLong(key, value)
-                            is Double -> putFloat(key, value.toFloat())
-                            is String -> putString(key, value)
-                            is JSONArray -> {
-                                val set = mutableSetOf<String>()
-                                for (i in 0 until value.length()) {
-                                    set.add(value.getString(i))
+                        val rawValue = targetObject.get(key)
+                        if (rawValue is JSONObject && rawValue.has("type") && rawValue.has("value")) {
+                            val type = rawValue.getString("type")
+                            when (type) {
+                                "boolean" -> putBoolean(key, rawValue.getBoolean("value"))
+                                "int" -> putInt(key, rawValue.getInt("value"))
+                                "long" -> putLong(key, rawValue.getLong("value"))
+                                "float" -> putFloat(key, rawValue.getDouble("value").toFloat())
+                                "string" -> putString(key, rawValue.getString("value"))
+                                "string_set", "stringSet" -> {
+                                    val arr = rawValue.getJSONArray("value")
+                                    val set = mutableSetOf<String>()
+                                    for (i in 0 until arr.length()) set.add(arr.getString(i))
+                                    putStringSet(key, set)
                                 }
-                                putStringSet(key, set)
+                            }
+                        } else {
+                            // Flat JSON without explicit wrapper (e.g. from older .fsk backups)
+                            val expectedType = PreferenceUtils.getExpectedPrefType(key)
+                            when (expectedType) {
+                                PrefType.FLOAT -> {
+                                    val f = when (rawValue) {
+                                        is Number -> rawValue.toFloat()
+                                        is String -> rawValue.toFloatOrNull()
+                                        else -> null
+                                    }
+                                    if (f != null) putFloat(key, f)
+                                }
+                                PrefType.INT -> {
+                                    val i = when (rawValue) {
+                                        is Number -> rawValue.toInt()
+                                        is String -> rawValue.toIntOrNull()
+                                        else -> null
+                                    }
+                                    if (i != null) putInt(key, i)
+                                }
+                                PrefType.LONG -> {
+                                    val l = when (rawValue) {
+                                        is Number -> rawValue.toLong()
+                                        is String -> rawValue.toLongOrNull()
+                                        else -> null
+                                    }
+                                    if (l != null) putLong(key, l)
+                                }
+                                PrefType.BOOLEAN -> {
+                                    val b = when (rawValue) {
+                                        is Boolean -> rawValue
+                                        is String -> rawValue.toBooleanStrictOrNull()
+                                        is Number -> rawValue.toInt() != 0
+                                        else -> null
+                                    }
+                                    if (b != null) putBoolean(key, b)
+                                }
+                                PrefType.STRING -> {
+                                    if (rawValue !is JSONArray && rawValue !is JSONObject) {
+                                        putString(key, rawValue.toString())
+                                    }
+                                }
+                                PrefType.STRING_SET -> {
+                                    if (rawValue is JSONArray) {
+                                        val set = mutableSetOf<String>()
+                                        for (i in 0 until rawValue.length()) {
+                                            set.add(rawValue.getString(i))
+                                        }
+                                        putStringSet(key, set)
+                                    }
+                                }
+                                PrefType.UNKNOWN -> {
+                                    when (rawValue) {
+                                        is Boolean -> putBoolean(key, rawValue)
+                                        is Int -> putInt(key, rawValue)
+                                        is Long -> putLong(key, rawValue)
+                                        is Double -> putFloat(key, rawValue.toFloat())
+                                        is Float -> putFloat(key, rawValue)
+                                        is String -> putString(key, rawValue)
+                                        is JSONArray -> {
+                                            val set = mutableSetOf<String>()
+                                            for (i in 0 until rawValue.length()) {
+                                                set.add(rawValue.getString(i))
+                                            }
+                                            putStringSet(key, set)
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
+            PreferenceUtils.sanitizePreferences(prefs)
         } catch (t: Throwable) {
             Log.w(TAG, "Error restoring preferences JSON, trying line fallback", t)
             // Fallback for older line-based format
             restoreLegacyPrefLines(prefs, jsonString.split("\n"), categoriesToRestore)
+            PreferenceUtils.sanitizePreferences(prefs)
         }
     }
 
@@ -451,7 +533,7 @@ object FrostKeysBackupManager {
                             "long" -> putLong(key, json.getLong("value"))
                             "float" -> putFloat(key, json.getDouble("value").toFloat())
                             "string" -> putString(key, json.getString("value"))
-                            "stringSet" -> {
+                            "stringSet", "string_set" -> {
                                 val arr = json.getJSONArray("value")
                                 val set = mutableSetOf<String>()
                                 for (i in 0 until arr.length()) set.add(arr.getString(i))
@@ -464,20 +546,50 @@ object FrostKeysBackupManager {
         }
     }
 
-    private fun mapToJsonObject(map: Map<String, Any?>): JSONObject {
-        val json = JSONObject()
+    private fun mapToTypedJsonObject(map: Map<String, Any?>): JSONObject {
+        val root = JSONObject()
+        val entries = JSONObject()
         map.forEach { (k, v) ->
             if (k != null && v != null) {
-                if (v is Set<*>) {
-                    val arr = JSONArray()
-                    v.forEach { if (it is String) arr.put(it) }
-                    json.put(k, arr)
-                } else {
-                    json.put(k, v)
+                val item = JSONObject()
+                when (v) {
+                    is Boolean -> {
+                        item.put("type", "boolean")
+                        item.put("value", v)
+                    }
+                    is Float -> {
+                        item.put("type", "float")
+                        item.put("value", v.toDouble())
+                    }
+                    is Int -> {
+                        item.put("type", "int")
+                        item.put("value", v)
+                    }
+                    is Long -> {
+                        item.put("type", "long")
+                        item.put("value", v)
+                    }
+                    is String -> {
+                        item.put("type", "string")
+                        item.put("value", v)
+                    }
+                    is Set<*> -> {
+                        item.put("type", "string_set")
+                        val arr = JSONArray()
+                        v.forEach { if (it is String) arr.put(it) }
+                        item.put("value", arr)
+                    }
+                    else -> {
+                        item.put("type", "string")
+                        item.put("value", v.toString())
+                    }
                 }
+                entries.put(k, item)
             }
         }
-        return json
+        root.put("__format__", "typed_v2")
+        root.put("entries", entries)
+        return root
     }
 
     private fun restoreEntryToDir(zip: ZipInputStream, targetDir: File, relativePath: String): Boolean {

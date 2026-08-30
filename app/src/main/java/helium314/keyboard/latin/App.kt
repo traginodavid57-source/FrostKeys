@@ -12,8 +12,10 @@ import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.FoldableUtils
 import helium314.keyboard.latin.utils.LayoutUtilsCustom
 import helium314.keyboard.latin.utils.Log
+import helium314.keyboard.latin.utils.PreferenceUtils
 import helium314.keyboard.latin.utils.SubtypeSettings
 import helium314.keyboard.latin.utils.prefs
+import helium314.keyboard.latin.utils.protectedPrefs
 import helium314.keyboard.latin.utils.upgradeToolbarPrefs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,6 +32,8 @@ class App : Application() {
                     .build()
             )
         }
+        PreferenceUtils.sanitizePreferences(prefs())
+        PreferenceUtils.sanitizePreferences(protectedPrefs())
         DebugFlags.init(this)
         FoldableUtils.init(this)
         Settings.init(this)

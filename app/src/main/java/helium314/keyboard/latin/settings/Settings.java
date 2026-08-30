@@ -38,6 +38,7 @@ import helium314.keyboard.latin.utils.FoldableUtils;
 import helium314.keyboard.latin.utils.KtxKt;
 import helium314.keyboard.latin.utils.LayoutType;
 import helium314.keyboard.latin.utils.Log;
+import helium314.keyboard.latin.utils.PreferenceUtils;
 import helium314.keyboard.latin.utils.ResourceUtils;
 import helium314.keyboard.latin.utils.RunInLocaleKt;
 import helium314.keyboard.latin.utils.StatsUtils;
@@ -479,7 +480,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
             boolean folded) {
         int index = SettingsKt.findIndexOfDefaultSetting(landscape, split, folded);
         String key = SettingsKt.createPrefKeyForBooleanSettings(PREF_ONE_HANDED_SCALE_PREFIX, index, 3);
-        return prefs.getFloat(key, Defaults.PREF_ONE_HANDED_SCALE);
+        return PreferenceUtils.getFloatSafe(prefs, key, Defaults.PREF_ONE_HANDED_SCALE);
     }
 
     public void writeOneHandedModeScale(final Float scale) {
@@ -494,7 +495,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
             boolean folded) {
         int index = SettingsKt.findIndexOfDefaultSetting(landscape, split, folded);
         String key = SettingsKt.createPrefKeyForBooleanSettings(PREF_ONE_HANDED_GRAVITY_PREFIX, index, 3);
-        return prefs.getInt(key, Defaults.PREF_ONE_HANDED_GRAVITY);
+        return PreferenceUtils.getIntSafe(prefs, key, Defaults.PREF_ONE_HANDED_GRAVITY);
     }
 
     public void writeOneHandedModeGravity(final int gravity) {
@@ -508,7 +509,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static boolean readFloatingKeyboardEnabled(SharedPreferences prefs, boolean landscape, boolean folded) {
         int index = SettingsKt.findIndexOfDefaultSetting(landscape, false, folded);
         String key = SettingsKt.createPrefKeyForBooleanSettings(PREF_FLOATING_KEYBOARD_ENABLED_PREFIX, index, 3);
-        return prefs.getBoolean(key, Defaults.PREF_FLOATING_KEYBOARD);
+        return PreferenceUtils.getBooleanSafe(prefs, key, Defaults.PREF_FLOATING_KEYBOARD);
     }
 
     public static void writeFloatingKeyboardEnabled(SharedPreferences prefs, boolean enabled, boolean landscape, boolean folded) {
@@ -525,7 +526,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static float readFloatingKeyboardScale(SharedPreferences prefs, boolean landscape, boolean folded) {
         int index = SettingsKt.findIndexOfDefaultSetting(landscape, false, folded);
         String key = SettingsKt.createPrefKeyForBooleanSettings(PREF_FLOATING_KEYBOARD_SCALE_PREFIX, index, 3);
-        return prefs.getFloat(key, Defaults.PREF_FLOATING_KEYBOARD_SCALE);
+        return PreferenceUtils.getFloatSafe(prefs, key, Defaults.PREF_FLOATING_KEYBOARD_SCALE);
     }
 
     public static void writeFloatingKeyboardScale(SharedPreferences prefs, float scale, boolean landscape, boolean folded) {
@@ -537,13 +538,13 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static int readFloatingKeyboardX(SharedPreferences prefs, boolean landscape, boolean folded) {
         int index = SettingsKt.findIndexOfDefaultSetting(landscape, false, folded);
         String key = SettingsKt.createPrefKeyForBooleanSettings(PREF_FLOATING_KEYBOARD_X_PREFIX, index, 3);
-        return prefs.getInt(key, Defaults.PREF_FLOATING_KEYBOARD_X);
+        return PreferenceUtils.getIntSafe(prefs, key, Defaults.PREF_FLOATING_KEYBOARD_X);
     }
 
     public static int readFloatingKeyboardY(SharedPreferences prefs, boolean landscape, boolean folded) {
         int index = SettingsKt.findIndexOfDefaultSetting(landscape, false, folded);
         String key = SettingsKt.createPrefKeyForBooleanSettings(PREF_FLOATING_KEYBOARD_Y_PREFIX, index, 3);
-        return prefs.getInt(key, Defaults.PREF_FLOATING_KEYBOARD_Y);
+        return PreferenceUtils.getIntSafe(prefs, key, Defaults.PREF_FLOATING_KEYBOARD_Y);
     }
 
     public static void writeFloatingKeyboardPosition(SharedPreferences prefs, int x, int y, boolean landscape, boolean folded) {
@@ -571,7 +572,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
         int index = SettingsKt.findIndexOfDefaultSetting(landscape, folded);
         final Float[] defaults = Defaults.PREF_SPLIT_SPACER_SCALE;
         final float defaultValue = defaults[index];
-        return prefs.getFloat(SettingsKt.createPrefKeyForBooleanSettings(PREF_SPLIT_SPACER_SCALE_PREFIX, index, 2),
+        return PreferenceUtils.getFloatSafe(prefs, SettingsKt.createPrefKeyForBooleanSettings(PREF_SPLIT_SPACER_SCALE_PREFIX, index, 2),
                 defaultValue);
     }
 
@@ -583,7 +584,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
                 && KeyboardTheme.STYLE_DEFAULT.equals(prefs.getString(PREF_THEME_STYLE, Defaults.PREF_THEME_STYLE))) {
             defaultValue = 1.18f;
         }
-        return prefs.getFloat(SettingsKt.createPrefKeyForBooleanSettings(PREF_BOTTOM_PADDING_SCALE_PREFIX, index, 2),
+        return PreferenceUtils.getFloatSafe(prefs, SettingsKt.createPrefKeyForBooleanSettings(PREF_BOTTOM_PADDING_SCALE_PREFIX, index, 2),
                 defaultValue);
     }
 
@@ -596,7 +597,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
                 && KeyboardTheme.STYLE_DEFAULT.equals(prefs.getString(PREF_THEME_STYLE, Defaults.PREF_THEME_STYLE))) {
             defaultValue = 0.06f;
         }
-        return prefs.getFloat(SettingsKt.createPrefKeyForBooleanSettings(PREF_SIDE_PADDING_SCALE_PREFIX, index, 3),
+        return PreferenceUtils.getFloatSafe(prefs, SettingsKt.createPrefKeyForBooleanSettings(PREF_SIDE_PADDING_SCALE_PREFIX, index, 3),
                 defaultValue);
     }
 
@@ -604,7 +605,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
         int index = SettingsKt.findIndexOfDefaultSetting(landscape, folded);
         final Float[] defaults = Defaults.PREF_KEYBOARD_HEIGHT_SCALE;
         final float defaultValue = defaults[index];
-        return prefs.getFloat(SettingsKt.createPrefKeyForBooleanSettings(PREF_KEYBOARD_HEIGHT_SCALE_PREFIX, index, 2),
+        return PreferenceUtils.getFloatSafe(prefs, SettingsKt.createPrefKeyForBooleanSettings(PREF_KEYBOARD_HEIGHT_SCALE_PREFIX, index, 2),
                 defaultValue);
     }
 
@@ -697,12 +698,12 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
         int index = SettingsKt.findIndexOfDefaultSetting(landscape, folded);
         final Float[] defaults = Defaults.PREF_BOTTOM_ROW_SCALE;
         final float defaultValue = defaults[index];
-        return prefs.getFloat(SettingsKt.createPrefKeyForBooleanSettings(PREF_BOTTOM_ROW_SCALE_PREFIX, index, 2),
+        return PreferenceUtils.getFloatSafe(prefs, SettingsKt.createPrefKeyForBooleanSettings(PREF_BOTTOM_ROW_SCALE_PREFIX, index, 2),
                 defaultValue);
     }
 
     public static int readKeyboardCornerRadius(final SharedPreferences prefs) {
-        final int radius = prefs.getInt(PREF_KEYBOARD_CORNER_RADIUS, Defaults.PREF_KEYBOARD_CORNER_RADIUS);
+        final int radius = PreferenceUtils.getIntSafe(prefs, PREF_KEYBOARD_CORNER_RADIUS, Defaults.PREF_KEYBOARD_CORNER_RADIUS);
         return Math.max(KEYBOARD_CORNER_RADIUS_MIN_DP, Math.min(radius, KEYBOARD_CORNER_RADIUS_MAX_DP));
     }
 

@@ -26,6 +26,8 @@ import helium314.keyboard.keyboard.KeyboardTheme
 import helium314.keyboard.keyboard.MainKeyboardView
 import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
+import helium314.keyboard.latin.utils.getBooleanSafe
+import helium314.keyboard.latin.utils.getFloatSafe
 import helium314.keyboard.latin.utils.prefs
 
 class RoundedKeyboardFrameView @JvmOverloads constructor(
@@ -252,7 +254,7 @@ class RoundedKeyboardFrameView @JvmOverloads constructor(
 
     private fun staticDustEnabled(): Boolean {
         return KeyboardTheme.livePreviewValues?.dustEnabled
-            ?: context.prefs().getBoolean(Settings.PREF_FROSTED_DUST_ENABLED, Defaults.PREF_FROSTED_DUST_ENABLED)
+            ?: context.prefs().getBooleanSafe(Settings.PREF_FROSTED_DUST_ENABLED, Defaults.PREF_FROSTED_DUST_ENABLED)
     }
 
     private fun staticDustAlpha(): Float {
@@ -262,12 +264,12 @@ class RoundedKeyboardFrameView @JvmOverloads constructor(
 
         val prefs = context.prefs()
         val alpha = if (KeyboardTheme.isDarkThemeActive(context)) {
-            prefs.getFloat(
+            prefs.getFloatSafe(
                 Settings.PREF_FROSTED_DUST_ALPHA_NIGHT,
-                prefs.getFloat(Settings.PREF_FROSTED_DUST_ALPHA, Defaults.PREF_FROSTED_DUST_ALPHA_NIGHT)
+                prefs.getFloatSafe(Settings.PREF_FROSTED_DUST_ALPHA, Defaults.PREF_FROSTED_DUST_ALPHA_NIGHT)
             )
         } else {
-            prefs.getFloat(Settings.PREF_FROSTED_DUST_ALPHA, Defaults.PREF_FROSTED_DUST_ALPHA)
+            prefs.getFloatSafe(Settings.PREF_FROSTED_DUST_ALPHA, Defaults.PREF_FROSTED_DUST_ALPHA)
         }
         return renderSparkleAlpha(alpha)
     }

@@ -28,6 +28,7 @@ import helium314.keyboard.latin.utils.DeviceProtectedUtils
 import helium314.keyboard.latin.utils.ExecutorUtils
 import helium314.keyboard.latin.utils.LayoutUtilsCustom
 import helium314.keyboard.latin.utils.Log
+import helium314.keyboard.latin.utils.PreferenceUtils
 import helium314.keyboard.latin.utils.SubtypeSettings
 import helium314.keyboard.latin.utils.getActivity
 import helium314.keyboard.latin.utils.prefs
@@ -181,6 +182,8 @@ private fun restoreLauncher(onError: (String) -> Unit): ManagedActivityResultLau
                 }
 
                 Database.copyFromDb(restoredDb, ctx)
+                PreferenceUtils.sanitizePreferences(ctx.prefs())
+                PreferenceUtils.sanitizePreferences(ctx.protectedPrefs())
                 Looper.prepare()
                 Toast.makeText(ctx, ctx.getString(R.string.backup_restored), Toast.LENGTH_LONG).show()
             } catch (t: Throwable) {
@@ -191,6 +194,8 @@ private fun restoreLauncher(onError: (String) -> Unit): ManagedActivityResultLau
             }
         }
         wait.await()
+        PreferenceUtils.sanitizePreferences(ctx.prefs())
+        PreferenceUtils.sanitizePreferences(ctx.protectedPrefs())
         checkVersionUpgrade(ctx)
         transferOldPinnedClips(ctx)
         Settings.getInstance().startListener()
@@ -317,6 +322,8 @@ fun restoreSilently(ctx: Context, inputStream: InputStream): Boolean {
         }
         
         Database.copyFromDb(restoredDb, ctx)
+        PreferenceUtils.sanitizePreferences(ctx.prefs())
+        PreferenceUtils.sanitizePreferences(ctx.protectedPrefs())
         runCatching { transferOldPinnedClips(ctx) }
         runCatching { Settings.getInstance().startListener() }
         runCatching { SubtypeSettings.reloadEnabledSubtypes(ctx) }

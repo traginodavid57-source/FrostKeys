@@ -15,6 +15,7 @@ import helium314.keyboard.keyboard.KeyboardTheme
 import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.ResourceUtils
+import helium314.keyboard.latin.utils.getIntSafe
 import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.latin.utils.updateSoftInputWindowLayoutParameters
 import helium314.keyboard.settings.SettingsActivity
@@ -944,9 +945,9 @@ object FrostedGlassHelper {
         val isNight = isNight(context)
         return helium314.keyboard.keyboard.KeyboardTheme.livePreviewValues?.blurRadius
             ?: if (isNight) {
-                context.prefs().getInt(Settings.PREF_FROSTED_BLUR_RADIUS_NIGHT, Defaults.PREF_FROSTED_BLUR_RADIUS_NIGHT)
+                context.prefs().getIntSafe(Settings.PREF_FROSTED_BLUR_RADIUS_NIGHT, Defaults.PREF_FROSTED_BLUR_RADIUS_NIGHT)
             } else {
-                context.prefs().getInt(Settings.PREF_FROSTED_BLUR_RADIUS, Defaults.PREF_FROSTED_BLUR_RADIUS)
+                context.prefs().getIntSafe(Settings.PREF_FROSTED_BLUR_RADIUS, Defaults.PREF_FROSTED_BLUR_RADIUS)
             }
     }
     /**
@@ -961,13 +962,13 @@ object FrostedGlassHelper {
 
         // Read user's background transparency setting (0-255 alpha)
         val bgTransparency = KeyboardTheme.livePreviewValues?.bgTransparency
-            ?: if (isNight) prefs.getInt(Settings.PREF_FROSTED_BG_TRANSPARENCY_NIGHT, Defaults.PREF_FROSTED_BG_TRANSPARENCY_NIGHT)
-            else prefs.getInt(Settings.PREF_FROSTED_BG_TRANSPARENCY, Defaults.PREF_FROSTED_BG_TRANSPARENCY)
+            ?: if (isNight) prefs.getIntSafe(Settings.PREF_FROSTED_BG_TRANSPARENCY_NIGHT, Defaults.PREF_FROSTED_BG_TRANSPARENCY_NIGHT)
+            else prefs.getIntSafe(Settings.PREF_FROSTED_BG_TRANSPARENCY, Defaults.PREF_FROSTED_BG_TRANSPARENCY)
 
         // Read user's color blend setting (0-200, percentage)
         val colorBlendPct = (KeyboardTheme.livePreviewValues?.colorBlend
-            ?: if (isNight) prefs.getInt(Settings.PREF_FROSTED_COLOR_BLEND_NIGHT, Defaults.PREF_FROSTED_COLOR_BLEND_NIGHT)
-            else prefs.getInt(Settings.PREF_FROSTED_COLOR_BLEND, Defaults.PREF_FROSTED_COLOR_BLEND)) / 100f
+            ?: if (isNight) prefs.getIntSafe(Settings.PREF_FROSTED_COLOR_BLEND_NIGHT, Defaults.PREF_FROSTED_COLOR_BLEND_NIGHT)
+            else prefs.getIntSafe(Settings.PREF_FROSTED_COLOR_BLEND, Defaults.PREF_FROSTED_COLOR_BLEND)) / 100f
 
         // Base tint: black for dark mode, white for light mode
         val baseColor = if (isNight) Color.BLACK else Color.WHITE

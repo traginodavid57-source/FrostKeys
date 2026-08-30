@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import helium314.keyboard.latin.R
 import helium314.keyboard.latin.settings.createPrefKeyForBooleanSettings
 import helium314.keyboard.latin.utils.FoldableUtils
+import helium314.keyboard.latin.utils.getFloatSafe
 import helium314.keyboard.latin.utils.prefs
 import helium314.keyboard.latin.utils.Theme
 import helium314.keyboard.settings.WithSmallTitle
@@ -118,7 +119,7 @@ private fun KeyboardScaleDialog(
                     }
                     variants.forEachIndexed { i, variant ->
                         val key = keys[i]
-                        var sliderPosition by remember { mutableFloatStateOf(prefs.getFloat(key, defaultValues[i])) }
+                        var sliderPosition by remember { mutableFloatStateOf(prefs.getFloatSafe(key, defaultValues[i])) }
                         if (!done.contains(variant))
                             done[variant] = {
                                 if (sliderPosition == defaultValues[i])

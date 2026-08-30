@@ -47,12 +47,13 @@ import helium314.keyboard.latin.R
 import helium314.keyboard.latin.LatinIME
 import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
+import helium314.keyboard.latin.utils.getBooleanSafe
+import helium314.keyboard.latin.utils.getFloatSafe
+import helium314.keyboard.latin.utils.getIntSafe
 import helium314.keyboard.latin.utils.prefs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
-
 
 private data class FrostedProfileSnapshot(
     val blurRadius: Int,
@@ -86,34 +87,34 @@ fun FrostedGlassAdjustDialog(
 
     // 1. Snapshot the initial state when the dialog opens
     val initialSnapshot = remember {
-        val legacyDustAlpha = prefs.getFloat(Settings.PREF_FROSTED_DUST_ALPHA, Defaults.PREF_FROSTED_DUST_ALPHA)
+        val legacyDustAlpha = prefs.getFloatSafe(Settings.PREF_FROSTED_DUST_ALPHA, Defaults.PREF_FROSTED_DUST_ALPHA)
         FrostedSettingsSnapshot(
             light = FrostedProfileSnapshot(
-                blurRadius = prefs.getInt(Settings.PREF_FROSTED_BLUR_RADIUS, Defaults.PREF_FROSTED_BLUR_RADIUS),
-                keyTransparency = prefs.getInt(Settings.PREF_FROSTED_KEY_TRANSPARENCY, Defaults.PREF_FROSTED_KEY_TRANSPARENCY),
-                bgTransparency = prefs.getInt(Settings.PREF_FROSTED_BG_TRANSPARENCY, Defaults.PREF_FROSTED_BG_TRANSPARENCY),
-                colorBlend = prefs.getInt(Settings.PREF_FROSTED_COLOR_BLEND, Defaults.PREF_FROSTED_COLOR_BLEND),
-                saturation = prefs.getInt(Settings.PREF_FROSTED_SATURATION, Defaults.PREF_FROSTED_SATURATION),
-                specialVibrancy = prefs.getInt(Settings.PREF_FROSTED_SPECIAL_VIBRANCY, Defaults.PREF_FROSTED_SPECIAL_VIBRANCY),
-                alphabetVibrancy = prefs.getInt(Settings.PREF_FROSTED_ALPHABET_VIBRANCY, Defaults.PREF_FROSTED_ALPHABET_VIBRANCY),
+                blurRadius = prefs.getIntSafe(Settings.PREF_FROSTED_BLUR_RADIUS, Defaults.PREF_FROSTED_BLUR_RADIUS),
+                keyTransparency = prefs.getIntSafe(Settings.PREF_FROSTED_KEY_TRANSPARENCY, Defaults.PREF_FROSTED_KEY_TRANSPARENCY),
+                bgTransparency = prefs.getIntSafe(Settings.PREF_FROSTED_BG_TRANSPARENCY, Defaults.PREF_FROSTED_BG_TRANSPARENCY),
+                colorBlend = prefs.getIntSafe(Settings.PREF_FROSTED_COLOR_BLEND, Defaults.PREF_FROSTED_COLOR_BLEND),
+                saturation = prefs.getIntSafe(Settings.PREF_FROSTED_SATURATION, Defaults.PREF_FROSTED_SATURATION),
+                specialVibrancy = prefs.getIntSafe(Settings.PREF_FROSTED_SPECIAL_VIBRANCY, Defaults.PREF_FROSTED_SPECIAL_VIBRANCY),
+                alphabetVibrancy = prefs.getIntSafe(Settings.PREF_FROSTED_ALPHABET_VIBRANCY, Defaults.PREF_FROSTED_ALPHABET_VIBRANCY),
                 dustAlpha = legacyDustAlpha.coerceIn(1f, 10f),
-                liquidGlassIntensity = prefs.getInt(Settings.PREF_LIQUID_GLASS_INTENSITY, Defaults.PREF_LIQUID_GLASS_INTENSITY)
+                liquidGlassIntensity = prefs.getIntSafe(Settings.PREF_LIQUID_GLASS_INTENSITY, Defaults.PREF_LIQUID_GLASS_INTENSITY)
             ),
             dark = FrostedProfileSnapshot(
-                blurRadius = prefs.getInt(Settings.PREF_FROSTED_BLUR_RADIUS_NIGHT, Defaults.PREF_FROSTED_BLUR_RADIUS_NIGHT),
-                keyTransparency = prefs.getInt(Settings.PREF_FROSTED_KEY_TRANSPARENCY_NIGHT, Defaults.PREF_FROSTED_KEY_TRANSPARENCY_NIGHT),
-                bgTransparency = prefs.getInt(Settings.PREF_FROSTED_BG_TRANSPARENCY_NIGHT, Defaults.PREF_FROSTED_BG_TRANSPARENCY_NIGHT),
-                colorBlend = prefs.getInt(Settings.PREF_FROSTED_COLOR_BLEND_NIGHT, Defaults.PREF_FROSTED_COLOR_BLEND_NIGHT),
-                saturation = prefs.getInt(Settings.PREF_FROSTED_SATURATION_NIGHT, Defaults.PREF_FROSTED_SATURATION_NIGHT),
-                specialVibrancy = prefs.getInt(Settings.PREF_FROSTED_SPECIAL_VIBRANCY_NIGHT, Defaults.PREF_FROSTED_SPECIAL_VIBRANCY_NIGHT),
-                alphabetVibrancy = prefs.getInt(Settings.PREF_FROSTED_ALPHABET_VIBRANCY_NIGHT, Defaults.PREF_FROSTED_ALPHABET_VIBRANCY_NIGHT),
-                dustAlpha = prefs.getFloat(
+                blurRadius = prefs.getIntSafe(Settings.PREF_FROSTED_BLUR_RADIUS_NIGHT, Defaults.PREF_FROSTED_BLUR_RADIUS_NIGHT),
+                keyTransparency = prefs.getIntSafe(Settings.PREF_FROSTED_KEY_TRANSPARENCY_NIGHT, Defaults.PREF_FROSTED_KEY_TRANSPARENCY_NIGHT),
+                bgTransparency = prefs.getIntSafe(Settings.PREF_FROSTED_BG_TRANSPARENCY_NIGHT, Defaults.PREF_FROSTED_BG_TRANSPARENCY_NIGHT),
+                colorBlend = prefs.getIntSafe(Settings.PREF_FROSTED_COLOR_BLEND_NIGHT, Defaults.PREF_FROSTED_COLOR_BLEND_NIGHT),
+                saturation = prefs.getIntSafe(Settings.PREF_FROSTED_SATURATION_NIGHT, Defaults.PREF_FROSTED_SATURATION_NIGHT),
+                specialVibrancy = prefs.getIntSafe(Settings.PREF_FROSTED_SPECIAL_VIBRANCY_NIGHT, Defaults.PREF_FROSTED_SPECIAL_VIBRANCY_NIGHT),
+                alphabetVibrancy = prefs.getIntSafe(Settings.PREF_FROSTED_ALPHABET_VIBRANCY_NIGHT, Defaults.PREF_FROSTED_ALPHABET_VIBRANCY_NIGHT),
+                dustAlpha = prefs.getFloatSafe(
                     Settings.PREF_FROSTED_DUST_ALPHA_NIGHT,
                     legacyDustAlpha
                 ).coerceIn(1f, 10f),
-                liquidGlassIntensity = prefs.getInt(Settings.PREF_LIQUID_GLASS_INTENSITY_NIGHT, Defaults.PREF_LIQUID_GLASS_INTENSITY_NIGHT)
+                liquidGlassIntensity = prefs.getIntSafe(Settings.PREF_LIQUID_GLASS_INTENSITY_NIGHT, Defaults.PREF_LIQUID_GLASS_INTENSITY_NIGHT)
             ),
-            dustEnabled = prefs.getBoolean(Settings.PREF_FROSTED_DUST_ENABLED, Defaults.PREF_FROSTED_DUST_ENABLED)
+            dustEnabled = prefs.getBooleanSafe(Settings.PREF_FROSTED_DUST_ENABLED, Defaults.PREF_FROSTED_DUST_ENABLED)
         )
     }
 

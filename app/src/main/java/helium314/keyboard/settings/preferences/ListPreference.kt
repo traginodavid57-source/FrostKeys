@@ -48,15 +48,46 @@ fun <T: Any> ListPreference(
 }
 
 @Suppress("UNCHECKED_CAST")
-fun <T: Any> getPrefOfType(prefs: SharedPreferences, key: String, default: T): T =
-    when (default) {
-        is String -> prefs.getString(key, default)
-        is Int -> prefs.getInt(key, default)
-        is Long -> prefs.getLong(key, default)
-        is Float -> prefs.getFloat(key, default)
-        is Boolean -> prefs.getBoolean(key, default)
-        else -> throw IllegalArgumentException("unknown type ${default.javaClass}")
-    } as T
+fun <T: Any> getPrefOfType(prefs: SharedPreferences, key: String, default: T): T {
+    return try {
+        when (default) {
+            is String -> prefs.getString(key, default)
+            is Int -> prefs.getInt(key, default)
+            is Long -> prefs.getLong(key, default)
+            is Float -> prefs.getFloat(key, default)
+            is Boolean -> prefs.getBoolean(key, default)
+            else -> throw IllegalArgumentException("unknown type ${default.javaClass}")
+        } as T
+    } catch (e: ClassCastException) {
+        val v = prefs.all[key]
+        val converted: Any = when (default) {
+            is Float -> when (v) {
+                is Number -> v.toFloat()
+                is String -> v.toFloatOrNull() ?: default
+                else -> default
+            }
+            is Int -> when (v) {
+                is Number -> v.toInt()
+                is String -> v.toIntOrNull() ?: default
+                else -> default
+            }
+            is Long -> when (v) {
+                is Number -> v.toLong()
+                is String -> v.toLongOrNull() ?: default
+                else -> default
+            }
+            is Boolean -> when (v) {
+                is String -> v.toBooleanStrictOrNull() ?: default
+                is Number -> v.toInt() != 0
+                else -> default
+            }
+            is String -> v?.toString() ?: default
+            else -> default
+        }
+        putPrefOfType(prefs, key, converted)
+        converted as T
+    }
+}
 
 private fun <T: Any> putPrefOfType(prefs: SharedPreferences, key: String, value: T) =
     prefs.edit {

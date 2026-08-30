@@ -26,6 +26,11 @@ import helium314.keyboard.latin.utils.LayoutType
 import helium314.keyboard.latin.utils.LayoutType.Companion.folder
 import helium314.keyboard.latin.utils.LayoutUtilsCustom
 import helium314.keyboard.latin.utils.Log
+import helium314.keyboard.latin.utils.PreferenceUtils
+import helium314.keyboard.latin.utils.getBooleanSafe
+import helium314.keyboard.latin.utils.getFloatSafe
+import helium314.keyboard.latin.utils.getIntSafe
+import helium314.keyboard.latin.utils.getStringSafe
 import helium314.keyboard.latin.utils.ScriptUtils.SCRIPT_LATIN
 import helium314.keyboard.latin.utils.ScriptUtils.script
 import helium314.keyboard.latin.utils.SubtypeSettings
@@ -53,6 +58,8 @@ private const val PREF_DEFAULT_BACKUP_RESTORED = "default_backup_restored"
 private const val VERSION_FROSTED_DUST_DEFAULT_OFF = 2409
 
 fun checkVersionUpgrade(context: Context) {
+    PreferenceUtils.sanitizePreferences(context.prefs())
+    PreferenceUtils.sanitizePreferences(context.protectedPrefs())
     val prefs = context.prefs()
     var oldVersion = prefs.getInt(Settings.PREF_VERSION_CODE, 0)
     var restoredDefaultBackupForFreshInstall = false
@@ -658,7 +665,7 @@ private object AppUpgrade {
                         val key = createPrefKeyForBooleanSettings(prefix, i, 1)
                         if (prefs.contains(key)) {
                             val newKey = createPrefKeyForBooleanSettings(prefix, i, 2)
-                            putFloat(newKey, prefs.getFloat(key, 0f))
+                            putFloat(newKey, prefs.getFloatSafe(key, 0f))
                             remove(key)
                         }
                     }
@@ -669,7 +676,7 @@ private object AppUpgrade {
                         val key = createPrefKeyForBooleanSettings(prefix, i, 2)
                         if (prefs.contains(key)) {
                             val newKey = createPrefKeyForBooleanSettings(prefix, i, 3)
-                            putFloat(newKey, prefs.getFloat(key, 0f))
+                            putFloat(newKey, prefs.getFloatSafe(key, 0f))
                             remove(key)
                         }
                     }
@@ -679,21 +686,21 @@ private object AppUpgrade {
                     val keyB = createPrefKeyForBooleanSettings(Settings.PREF_ONE_HANDED_GRAVITY_PREFIX, i, 2)
                     if (prefs.contains(keyA)) {
                         val newKey = createPrefKeyForBooleanSettings(Settings.PREF_ONE_HANDED_MODE_PREFIX, i, 3)
-                        putBoolean(newKey, prefs.getBoolean(keyA, false))
+                        putBoolean(newKey, prefs.getBooleanSafe(keyA, false))
                         remove(keyA)
                     }
                     if (prefs.contains(keyB)) {
                         val newKey = createPrefKeyForBooleanSettings(Settings.PREF_ONE_HANDED_GRAVITY_PREFIX, i, 3)
-                        putInt(newKey, prefs.getInt(keyB, 0))
+                        putInt(newKey, prefs.getIntSafe(keyB, 0))
                         remove(keyB)
                     }
                 }
             }
             prefs.edit {
                 if (prefs.contains(Settings.PREF_SPACE_HORIZONTAL_SWIPE))
-                    putString(Settings.PREF_SPACE_HORIZONTAL_SWIPE, prefs.getString(Settings.PREF_SPACE_HORIZONTAL_SWIPE, "")!!.uppercase())
+                    putString(Settings.PREF_SPACE_HORIZONTAL_SWIPE, prefs.getStringSafe(Settings.PREF_SPACE_HORIZONTAL_SWIPE, "")!!.uppercase())
                 if (prefs.contains(Settings.PREF_SPACE_VERTICAL_SWIPE))
-                    putString(Settings.PREF_SPACE_VERTICAL_SWIPE, prefs.getString(Settings.PREF_SPACE_VERTICAL_SWIPE, "")!!.uppercase())
+                    putString(Settings.PREF_SPACE_VERTICAL_SWIPE, prefs.getStringSafe(Settings.PREF_SPACE_VERTICAL_SWIPE, "")!!.uppercase())
             }
         }
         if (!restoredDefaultBackupForFreshInstall

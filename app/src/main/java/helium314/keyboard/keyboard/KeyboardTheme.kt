@@ -24,6 +24,7 @@ import helium314.keyboard.latin.settings.Defaults
 import helium314.keyboard.latin.settings.Settings
 import helium314.keyboard.latin.utils.ResourceUtils
 import helium314.keyboard.latin.utils.brightenOrDarken
+import helium314.keyboard.latin.utils.getIntSafe
 import helium314.keyboard.latin.utils.isBrightColor
 import helium314.keyboard.latin.utils.isGoodContrast
 import helium314.keyboard.latin.utils.prefs
@@ -205,29 +206,29 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         val isLiquidGlassTheme = themeName == THEME_LIQUID_GLASS
                         val liquidIntensityPref = livePreviewValues?.liquidGlassIntensity
-                            ?: (if (isNight) prefs.getInt(Settings.PREF_LIQUID_GLASS_INTENSITY_NIGHT, Defaults.PREF_LIQUID_GLASS_INTENSITY_NIGHT)
-                                else prefs.getInt(Settings.PREF_LIQUID_GLASS_INTENSITY, Defaults.PREF_LIQUID_GLASS_INTENSITY))
+                            ?: (if (isNight) prefs.getIntSafe(Settings.PREF_LIQUID_GLASS_INTENSITY_NIGHT, Defaults.PREF_LIQUID_GLASS_INTENSITY_NIGHT)
+                                else prefs.getIntSafe(Settings.PREF_LIQUID_GLASS_INTENSITY, Defaults.PREF_LIQUID_GLASS_INTENSITY))
                         val liquidIntensityVal = (liquidIntensityPref / 100f).coerceIn(0f, 1f)
 
                         val keyTransparency = livePreviewValues?.keyTransparency
-                            ?: (if (isNight) prefs.getInt(Settings.PREF_FROSTED_KEY_TRANSPARENCY_NIGHT, Defaults.PREF_FROSTED_KEY_TRANSPARENCY_NIGHT)
-                                else prefs.getInt(Settings.PREF_FROSTED_KEY_TRANSPARENCY, Defaults.PREF_FROSTED_KEY_TRANSPARENCY))
+                            ?: (if (isNight) prefs.getIntSafe(Settings.PREF_FROSTED_KEY_TRANSPARENCY_NIGHT, Defaults.PREF_FROSTED_KEY_TRANSPARENCY_NIGHT)
+                                else prefs.getIntSafe(Settings.PREF_FROSTED_KEY_TRANSPARENCY, Defaults.PREF_FROSTED_KEY_TRANSPARENCY))
                         val colorBlendVal = (livePreviewValues?.colorBlend
-                            ?: (if (isNight) prefs.getInt(Settings.PREF_FROSTED_COLOR_BLEND_NIGHT, Defaults.PREF_FROSTED_COLOR_BLEND_NIGHT)
-                                else prefs.getInt(Settings.PREF_FROSTED_COLOR_BLEND, Defaults.PREF_FROSTED_COLOR_BLEND))) / 100f
+                            ?: (if (isNight) prefs.getIntSafe(Settings.PREF_FROSTED_COLOR_BLEND_NIGHT, Defaults.PREF_FROSTED_COLOR_BLEND_NIGHT)
+                                else prefs.getIntSafe(Settings.PREF_FROSTED_COLOR_BLEND, Defaults.PREF_FROSTED_COLOR_BLEND))) / 100f
                         val saturationMult = (livePreviewValues?.saturation
-                            ?: (if (isNight) prefs.getInt(Settings.PREF_FROSTED_SATURATION_NIGHT, Defaults.PREF_FROSTED_SATURATION_NIGHT)
-                                else prefs.getInt(Settings.PREF_FROSTED_SATURATION, Defaults.PREF_FROSTED_SATURATION))) / 100f
+                            ?: (if (isNight) prefs.getIntSafe(Settings.PREF_FROSTED_SATURATION_NIGHT, Defaults.PREF_FROSTED_SATURATION_NIGHT)
+                                else prefs.getIntSafe(Settings.PREF_FROSTED_SATURATION, Defaults.PREF_FROSTED_SATURATION))) / 100f
                         val bgTransparency = livePreviewValues?.bgTransparency
-                            ?: (if (isNight) prefs.getInt(Settings.PREF_FROSTED_BG_TRANSPARENCY_NIGHT, Defaults.PREF_FROSTED_BG_TRANSPARENCY_NIGHT)
-                                else prefs.getInt(Settings.PREF_FROSTED_BG_TRANSPARENCY, Defaults.PREF_FROSTED_BG_TRANSPARENCY))
+                            ?: (if (isNight) prefs.getIntSafe(Settings.PREF_FROSTED_BG_TRANSPARENCY_NIGHT, Defaults.PREF_FROSTED_BG_TRANSPARENCY_NIGHT)
+                                else prefs.getIntSafe(Settings.PREF_FROSTED_BG_TRANSPARENCY, Defaults.PREF_FROSTED_BG_TRANSPARENCY))
                         val specialVibrancyPref = livePreviewValues?.specialVibrancy
-                            ?: (if (isNight) prefs.getInt(Settings.PREF_FROSTED_SPECIAL_VIBRANCY_NIGHT, Defaults.PREF_FROSTED_SPECIAL_VIBRANCY_NIGHT)
-                                else prefs.getInt(Settings.PREF_FROSTED_SPECIAL_VIBRANCY, Defaults.PREF_FROSTED_SPECIAL_VIBRANCY))
+                            ?: (if (isNight) prefs.getIntSafe(Settings.PREF_FROSTED_SPECIAL_VIBRANCY_NIGHT, Defaults.PREF_FROSTED_SPECIAL_VIBRANCY_NIGHT)
+                                else prefs.getIntSafe(Settings.PREF_FROSTED_SPECIAL_VIBRANCY, Defaults.PREF_FROSTED_SPECIAL_VIBRANCY))
                         val specialVibrancyVal = specialVibrancyPref / 100f
                         val alphabetVibrancyVal = (livePreviewValues?.alphabetVibrancy
-                            ?: (if (isNight) prefs.getInt(Settings.PREF_FROSTED_ALPHABET_VIBRANCY_NIGHT, Defaults.PREF_FROSTED_ALPHABET_VIBRANCY_NIGHT)
-                                else prefs.getInt(Settings.PREF_FROSTED_ALPHABET_VIBRANCY, Defaults.PREF_FROSTED_ALPHABET_VIBRANCY))) / 100f
+                            ?: (if (isNight) prefs.getIntSafe(Settings.PREF_FROSTED_ALPHABET_VIBRANCY_NIGHT, Defaults.PREF_FROSTED_ALPHABET_VIBRANCY_NIGHT)
+                                else prefs.getIntSafe(Settings.PREF_FROSTED_ALPHABET_VIBRANCY, Defaults.PREF_FROSTED_ALPHABET_VIBRANCY))) / 100f
 
                         val boostSaturation = { color: Int ->
                             val alpha = android.graphics.Color.alpha(color)
