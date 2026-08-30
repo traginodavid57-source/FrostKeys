@@ -33,6 +33,8 @@ class FloatingKeyboardManager {
         private const val MIN_SIDE_MARGIN_DP = 8f
         private const val MIN_BOTTOM_MARGIN_DP = 24f
 
+        private var lastTapTime = 0L
+
         private fun dpToPx(context: Context, dp: Float): Int {
             return (dp * context.resources.displayMetrics.density + 0.5f).toInt()
         }
