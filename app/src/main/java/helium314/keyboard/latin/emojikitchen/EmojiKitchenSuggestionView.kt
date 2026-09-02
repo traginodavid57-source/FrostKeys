@@ -94,7 +94,7 @@ class EmojiKitchenSuggestionView(
 
                 val shape = GradientDrawable().apply {
                     cornerRadius = 8.dpToPx(resources).toFloat()
-                    val isDark = ColorUtils.calculateLuminance(colors.get(ColorType.KEYBOARD_BACKGROUND)) < 0.5
+                    val isDark = ColorUtils.calculateLuminance(colors.get(ColorType.MAIN_BACKGROUND)) < 0.5
                     setColor(if (isDark) Color.argb(35, 255, 255, 255) else Color.argb(25, 0, 0, 0))
                     setStroke(1.dpToPx(resources), if (isDark) Color.argb(55, 255, 255, 255) else Color.argb(35, 0, 0, 0))
                 }
