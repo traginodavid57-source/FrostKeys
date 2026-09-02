@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_active="true" android:state_pressed="true"
+          android:drawable="@drawable/key_background_liquid_action_pressed" />
+    <item android:state_active="true"
+          android:drawable="@drawable/key_background_liquid_action_normal" />
+    <item android:state_checkable="true" android:state_checked="true" android:state_pressed="true"
+          android:drawable="@drawable/key_background_liquid_action_pressed" />
+    <item android:state_checkable="true" android:state_checked="true"
+          android:drawable="@drawable/key_background_liquid_action_normal" />
+    <item android:state_pressed="true"
+          android:drawable="@drawable/key_background_liquid_light_pressed" />
+    <item android:drawable="@drawable/key_background_liquid_light_normal" />
+</selector>

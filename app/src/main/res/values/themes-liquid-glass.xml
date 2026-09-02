@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <style name="KeyboardTheme.Liquid_Glass" parent="KeyboardTheme.Rounded_Base_Border">
+        <item name="keyboardStyle">@style/Keyboard.Liquid_Glass</item>
+        <item name="keyboardViewStyle">@style/KeyboardView.Liquid_Glass</item>
+        <item name="mainKeyboardViewStyle">@style/MainKeyboardView.Liquid_Glass</item>
+        <item name="emojiPalettesViewStyle">@style/EmojiPalettesView.Liquid_Glass</item>
+        <item name="clipboardHistoryViewStyle">@style/ClipboardHistoryView.Liquid_Glass</item>
+        <item name="popupKeysKeyboardViewStyle">@style/PopupKeysKeyboardView.Liquid_Glass</item>
+        <item name="suggestionStripViewStyle">@style/SuggestionStripView.Liquid_Glass</item>
+    </style>
+
+    <style name="Keyboard.Liquid_Glass" parent="Keyboard.Rounded_Base_Border" />
+
+    <style name="KeyboardView.Liquid_Glass" parent="KeyboardView.Rounded_Base_Border">
+        <item name="keyBackground">@drawable/key_background_liquid_light</item>
+        <item name="functionalKeyBackground">@drawable/key_background_liquid_functional_light</item>
+        <item name="spacebarBackground">@drawable/key_background_liquid_spacebar_light</item>
+    </style>
+
+    <style name="MainKeyboardView.Liquid_Glass" parent="MainKeyboardView.Rounded_Base_Border">
+        <item name="keyBackground">@drawable/key_background_liquid_light</item>
+        <item name="functionalKeyBackground">@drawable/key_background_liquid_functional_light</item>
+        <item name="spacebarBackground">@drawable/key_background_liquid_spacebar_light</item>
+    </style>
+
+    <style name="EmojiPalettesView.Liquid_Glass" parent="EmojiPalettesView.Rounded_Base_Border">
+        <item name="keyBackground">@drawable/key_background_liquid_light</item>
+        <item name="functionalKeyBackground">@drawable/key_background_liquid_functional_light</item>
+        <item name="spacebarBackground">@drawable/key_background_liquid_spacebar_light</item>
+    </style>
+
+    <style name="ClipboardHistoryView.Liquid_Glass" parent="ClipboardHistoryView.Rounded_Base_Border">
+        <item name="keyBackground">@drawable/key_background_liquid_light</item>
+        <item name="functionalKeyBackground">@drawable/key_background_liquid_functional_light</item>
+    </style>
+
+    <style name="PopupKeysKeyboardView.Liquid_Glass" parent="PopupKeysKeyboardView.Rounded_Base_Border">
+        <item name="keyBackground">@drawable/key_background_liquid_light</item>
+    </style>
+
+    <style name="SuggestionStripView.Liquid_Glass" parent="SuggestionStripView.Rounded_Base_Border" />
+</resources>

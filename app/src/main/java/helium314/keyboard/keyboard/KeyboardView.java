@@ -400,7 +400,7 @@ public class KeyboardView extends View {
         if (mColors.isFrosted()) {
             if (key.getCode() == Constants.CODE_SPACE) {
                 frostedColorType = ColorType.SPACE_BAR_BACKGROUND;
-            } else if (key.hasActionKeyBackground()) {
+            } else if (key.getCode() == Constants.CODE_ENTER || key.hasActionKeyBackground()) {
                 frostedColorType = ColorType.ENTER_KEY_BACKGROUND;
             } else if (key.isShift() && isShifted(getKeyboard())) {
                 frostedColorType = ColorType.ACTION_KEY_BACKGROUND;
@@ -465,7 +465,7 @@ public class KeyboardView extends View {
                 LiquidGlassHelper.INSTANCE.drawLiquidGlassKey(canvas, rect, cornerRadius, baseColor, key.isPressed() || key.isLocked(), intensity, false);
             } else {
                 final float density = getResources().getDisplayMetrics().density;
-                final float cornerRadius = 6.0f * density;
+                final float cornerRadius = 11.0f * density;
                 LiquidGlassHelper.INSTANCE.drawLiquidGlassKey(canvas, rect, cornerRadius, baseColor, key.isPressed() || key.isLocked(), intensity, false);
             }
             canvas.translate(-bgX, -bgY);
@@ -1083,18 +1083,15 @@ public class KeyboardView extends View {
             mColors.setColor(icon, isPopupKeySelected(key)
                     ? ColorType.ACTION_KEY_ICON
                     : ColorType.KEY_PREVIEW_TEXT);
-        } else if (mColors.isFrosted() && (key.hasActionKeyBackground() || isSpecialKey(key))) {
-            mColors.setColor(icon, ColorType.KEY_ICON);
-        } else if (key.hasActionKeyBackground()) {
+        } else if (key.hasActionKeyBackground() || (key.getCode() == Constants.CODE_ENTER && mColors.isLiquidGlass())) {
             mColors.setColor(icon, ColorType.ACTION_KEY_ICON);
         } else if (key.isShift() && keyboard != null) {
-            if (keyboard.mId.mElementId == KeyboardId.ELEMENT_ALPHABET_MANUAL_SHIFTED
-                    || keyboard.mId.mElementId == KeyboardId.ELEMENT_ALPHABET_SHIFT_LOCKED
-                    || keyboard.mId.mElementId == KeyboardId.ELEMENT_ALPHABET_AUTOMATIC_SHIFTED
-                    || keyboard.mId.mElementId == KeyboardId.ELEMENT_ALPHABET_SHIFT_LOCK_SHIFTED)
+            if (isShifted(keyboard))
                 mColors.setColor(icon, ColorType.SHIFT_KEY_ICON);
             else
                 mColors.setColor(icon, ColorType.KEY_ICON); // normal key if not shifted
+        } else if (mColors.isFrosted() && isSpecialKey(key)) {
+            mColors.setColor(icon, ColorType.KEY_ICON);
         } else if (key.getBackgroundType() != Key.BACKGROUND_TYPE_NORMAL) {
             mColors.setColor(icon, ColorType.KEY_ICON);
         } else if (this instanceof PopupKeysKeyboardView) {

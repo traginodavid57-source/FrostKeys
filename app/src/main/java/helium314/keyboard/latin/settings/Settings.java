@@ -87,6 +87,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final String PREF_FROSTED_DUST_ALPHA_NIGHT = "pref_frosted_dust_alpha_night";
     public static final String PREF_LIQUID_GLASS_INTENSITY = "pref_liquid_glass_intensity";
     public static final String PREF_LIQUID_GLASS_INTENSITY_NIGHT = "pref_liquid_glass_intensity_night";
+    public static final String PREF_LIQUID_GLASS_ACCENT = "pref_liquid_glass_accent";
     public static final String PREF_FROSTED_GLASS_TRIGGER = "frosted_glass_trigger";
     public static final String PREF_BLUR_RENDER_OVERRIDE = "blur_render_override";
     public static final String PREF_NATIVE_BACKGROUND_BLUR_ONLY = "native_background_blur_only";
@@ -286,6 +287,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
             add(PREF_FROSTED_DUST_ALPHA_NIGHT);
             add(PREF_LIQUID_GLASS_INTENSITY);
             add(PREF_LIQUID_GLASS_INTENSITY_NIGHT);
+            add(PREF_LIQUID_GLASS_ACCENT);
             add(PREF_FROSTED_GLASS_TRIGGER);
             add(PREF_BLUR_RENDER_OVERRIDE);
             add(PREF_NATIVE_BACKGROUND_BLUR_ONLY);

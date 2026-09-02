@@ -256,22 +256,27 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
                         }
                         val actionAlpha = (15 + (keyTransparency / 255f * 240)).toInt().coerceIn(0, 255)
 
-                        val appleAccent = if (isNight) Color.rgb(10, 132, 255) else Color.rgb(0, 122, 255)
-                        val systemAccentColor = if (isLiquidGlassTheme) appleAccent
+                        val liquidAccentPref = prefs.getString(Settings.PREF_LIQUID_GLASS_ACCENT, Defaults.PREF_LIQUID_GLASS_ACCENT)
+                        val liquidAccentColor = when (liquidAccentPref) {
+                            "mint_green" -> if (isNight) Color.rgb(48, 209, 88) else Color.rgb(52, 199, 89)
+                            "liquid_amber", "liquid_gold" -> if (isNight) Color.rgb(255, 214, 10) else Color.rgb(255, 159, 10)
+                            else -> if (isNight) Color.rgb(10, 132, 255) else Color.rgb(0, 122, 255)
+                        }
+                        val systemAccentColor = if (isLiquidGlassTheme) liquidAccentColor
                             else if (isNight) ContextCompat.getColor(context, android.R.color.system_accent1_100)
                             else ContextCompat.getColor(context, android.R.color.system_accent1_200)
                         val systemNeutralColor = if (isLiquidGlassTheme) {
-                            if (isNight) Color.rgb(28, 28, 30) else Color.rgb(228, 230, 236)
+                            if (isNight) Color.rgb(22, 24, 29) else Color.rgb(232, 238, 245)
                         } else {
                             if (isNight) ContextCompat.getColor(context, android.R.color.system_neutral1_900)
                             else ContextCompat.getColor(context, android.R.color.system_neutral1_50)
                         }
 
-                        val accentBase = if (isLiquidGlassTheme) appleAccent else boostSaturation(systemAccentColor)
+                        val accentBase = if (isLiquidGlassTheme) liquidAccentColor else boostSaturation(systemAccentColor)
                         val accent = if (isLiquidGlassTheme) ColorUtils.setAlphaComponent(accentBase, 240)
                             else ColorUtils.setAlphaComponent(accentBase, actionAlpha)
                         val baseBg = if (isLiquidGlassTheme) {
-                            if (isNight) Color.rgb(28, 28, 30) else Color.rgb(222, 225, 233)
+                            if (isNight) Color.rgb(22, 24, 29) else Color.rgb(232, 238, 245)
                         } else if (isNight) {
                             val neutral1 = systemNeutralColor
                             val accent1 = ContextCompat.getColor(context, android.R.color.system_accent1_700)
@@ -287,7 +292,7 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
                         val background = if (isLiquidGlassTheme) ColorUtils.setAlphaComponent(baseBg, bgAlpha)
                             else boostSaturation(ColorUtils.setAlphaComponent(baseBg, bgAlpha))
                         val keyBgBase = if (isLiquidGlassTheme) {
-                            if (isNight) Color.rgb(72, 72, 76) else Color.rgb(255, 255, 255)
+                            if (isNight) Color.rgb(46, 50, 60) else Color.rgb(255, 255, 255)
                         } else if (isNight) {
                             val baseColor = ContextCompat.getColor(context, android.R.color.system_neutral1_800)
                             val accentColor = ContextCompat.getColor(context, android.R.color.system_accent1_200)
@@ -301,7 +306,7 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
                         }
 
                         val keyAlpha = if (isLiquidGlassTheme) {
-                            if (isNight) (150 + (keyTransparency / 255f * 95)).toInt().coerceIn(0, 255)
+                            if (isNight) (130 + (keyTransparency / 255f * 90)).toInt().coerceIn(0, 255)
                             else (195 + (keyTransparency / 255f * 60)).toInt().coerceIn(0, 255)
                         } else {
                             (10 + (keyTransparency / 255f * 245)).toInt().coerceIn(0, 255)
@@ -310,13 +315,13 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
                             else boostAlphabetSaturation(ColorUtils.setAlphaComponent(keyBgBase, keyAlpha))
 
                         val functionalBase = if (isLiquidGlassTheme) {
-                            if (isNight) Color.rgb(44, 44, 46) else Color.rgb(180, 185, 195)
+                            if (isNight) Color.rgb(32, 35, 43) else Color.rgb(215, 222, 232)
                         } else boostSaturation(if (isNight) ContextCompat.getColor(context, android.R.color.system_accent2_300)
                             else ContextCompat.getColor(context, android.R.color.system_accent2_100))
                         val functionalKey = ColorUtils.setAlphaComponent(functionalBase, actionAlpha)
 
                         val specialBgBase = if (isLiquidGlassTheme) {
-                            if (isNight) Color.rgb(44, 44, 46) else Color.rgb(180, 185, 195)
+                            if (isNight) Color.rgb(32, 35, 43) else Color.rgb(215, 222, 232)
                         } else if (isNight) {
                             val baseColor = ContextCompat.getColor(context, android.R.color.system_neutral1_800)
                             val accentColor = ContextCompat.getColor(context, android.R.color.system_accent1_200)
@@ -329,7 +334,7 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
                             ColorUtils.blendARGB(baseColor, accentColor, finalBlendRatio)
                         }
                         val specialKeyAlpha = if (isLiquidGlassTheme) {
-                            if (isNight) (160 + (keyTransparency / 255f * 85)).toInt().coerceIn(0, 255)
+                            if (isNight) (140 + (keyTransparency / 255f * 85)).toInt().coerceIn(0, 255)
                             else (175 + (keyTransparency / 255f * 70)).toInt().coerceIn(0, 255)
                         } else keyAlpha
                         val specialKeyBackground = if (isLiquidGlassTheme) ColorUtils.setAlphaComponent(specialBgBase, specialKeyAlpha)
@@ -337,12 +342,12 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
                         val enterKeyBackground = if (isLiquidGlassTheme) accent else specialKeyBackground
 
                         val keyText = if (isLiquidGlassTheme) {
-                            if (isNight) Color.WHITE else Color.rgb(18, 18, 20)
+                            if (isNight) Color.rgb(245, 245, 247) else Color.rgb(28, 30, 33)
                         } else if (isNight) ContextCompat.getColor(context, android.R.color.system_neutral1_50)
                         else ContextCompat.getColor(context, android.R.color.system_accent3_900)
 
                         val keyHintText = if (isLiquidGlassTheme) {
-                            if (isNight) Color.argb(160, 235, 235, 245) else Color.argb(160, 60, 60, 67)
+                            if (isNight) Color.argb(160, 235, 235, 245) else Color.argb(160, 44, 46, 51)
                         } else if (isNight) keyText
                         else ContextCompat.getColor(context, android.R.color.system_accent3_700)
                         

@@ -78,4 +78,68 @@
     <color name="panel_text_primary">#000000</color>
     <color name="textColorPrimary">#000000</color>
     <color name="panel_search_bg">#10000000</color>
+
+    <!-- Liquid Glass Theme Colors (Light & Dark acrylic glassmorphism) -->
+    <!-- Liquid Light (Clear): Soft cool ice translucent tones, high contrast dark neutral gray text -->
+    <color name="liquid_light_background">#D9E8EEF5</color>
+    <color name="liquid_light_key_normal_start">#B8FFFFFF</color>
+    <color name="liquid_light_key_normal_end">#80E2EAF2</color>
+    <color name="liquid_light_key_pressed_start">#E6FFFFFF</color>
+    <color name="liquid_light_key_pressed_end">#B3D5E0EC</color>
+    <color name="liquid_light_key_specular_stroke">#55FFFFFF</color>
+    <color name="liquid_light_key_specular_stroke_pressed">#75FFFFFF</color>
+    <color name="liquid_light_key_specular_top">#45FFFFFF</color>
+    <color name="liquid_light_key_specular_top_pressed">#65FFFFFF</color>
+    <color name="liquid_light_key_shadow">#20000000</color>
+    <color name="liquid_light_key_text">#1C1E21</color>
+    <color name="liquid_light_key_hint_text">#8C2C2E33</color>
+
+    <color name="liquid_light_functional_start">#99DFE5EE</color>
+    <color name="liquid_light_functional_end">#75CFD8E4</color>
+    <color name="liquid_light_functional_pressed_start">#CCDFE5EE</color>
+    <color name="liquid_light_functional_pressed_end">#A0CFD8E4</color>
+
+    <!-- Liquid Dark (Noir): Smoky dark acrylic effect, low opacity black/bluish-gray layers, readable matte white characters -->
+    <color name="liquid_dark_background">#D916181D</color>
+    <color name="liquid_dark_key_normal_start">#553A3F48</color>
+    <color name="liquid_dark_key_normal_end">#3520242C</color>
+    <color name="liquid_dark_key_pressed_start">#754E5562</color>
+    <color name="liquid_dark_key_pressed_end">#50323844</color>
+    <color name="liquid_dark_key_specular_stroke">#25FFFFFF</color>
+    <color name="liquid_dark_key_specular_stroke_pressed">#40FFFFFF</color>
+    <color name="liquid_dark_key_specular_top">#20FFFFFF</color>
+    <color name="liquid_dark_key_specular_top_pressed">#38FFFFFF</color>
+    <color name="liquid_dark_key_shadow">#45000000</color>
+    <color name="liquid_dark_key_text">#F5F5F7</color>
+    <color name="liquid_dark_key_hint_text">#80F5F5F7</color>
+
+    <color name="liquid_dark_functional_start">#45282C34</color>
+    <color name="liquid_dark_functional_end">#25181B22</color>
+    <color name="liquid_dark_functional_pressed_start">#65353A44</color>
+    <color name="liquid_dark_functional_pressed_end">#4022262E</color>
+
+    <!-- Special Keys & Action Vibrant Accents (Electric Blue, Mint Green, Liquid Amber/Gold) -->
+    <!-- Electric Blue -->
+    <color name="liquid_accent_electric_blue">#007AFF</color>
+    <color name="liquid_accent_electric_blue_dark">#0A84FF</color>
+    <color name="liquid_accent_blue_start">#E60A84FF</color>
+    <color name="liquid_accent_blue_end">#CC0062E0</color>
+    <color name="liquid_accent_blue_pressed_start">#FF2997FF</color>
+    <color name="liquid_accent_blue_pressed_end">#E60071FF</color>
+
+    <!-- Mint Green -->
+    <color name="liquid_accent_mint_green">#34C759</color>
+    <color name="liquid_accent_mint_dark">#30D158</color>
+    <color name="liquid_accent_mint_start">#E630D158</color>
+    <color name="liquid_accent_mint_end">#CC24A843</color>
+    <color name="liquid_accent_mint_pressed_start">#FF45D96C</color>
+    <color name="liquid_accent_mint_pressed_end">#E628B548</color>
+
+    <!-- Liquid Amber / Gold -->
+    <color name="liquid_accent_amber_gold">#FF9F0A</color>
+    <color name="liquid_accent_gold_dark">#FFD60A</color>
+    <color name="liquid_accent_gold_start">#E6FFB340</color>
+    <color name="liquid_accent_gold_end">#CCDE8800</color>
+    <color name="liquid_accent_gold_pressed_start">#FFC866</color>
+    <color name="liquid_accent_gold_pressed_end">#E6E69200</color>
 </resources>

@@ -70,11 +70,11 @@ object LiquidGlassHelper {
         val clampedIntensity = intensity.coerceIn(0.1f, 1.0f)
         val density = (rect.width() / 36f).coerceIn(1.0f, 3.0f)
 
-        // 1. Apple 3D Keycap Bottom Shelf / Physical Depth
-        val shadowHeight = (1.30f * density).coerceIn(1.5f, 4.0f)
+        // 1. Apple / Clink Physical Bottom Shelf & Base Diffuse Shadow
+        val shadowHeight = (1.20f * density).coerceIn(1.5f, 3.5f)
         val isLightBase = ColorUtils.calculateLuminance(baseColor) > 0.45
 
-        val pressOffset = if (isPressed) shadowHeight * 0.75f else 0f
+        val pressOffset = if (isPressed) shadowHeight * 0.70f else 0f
         val keyFace = RectF(
             rect.left,
             rect.top + pressOffset,
@@ -83,13 +83,13 @@ object LiquidGlassHelper {
         )
         val faceRadius = Math.max(0f, cornerRadius - 0.5f)
 
-        // Bottom shadow (shelf) visible under floating keycap
+        // Light diffuse shadow at the base to decouple keys from the background panel without losing transparency
         if (!isPressed) {
             val shadowRect = RectF(rect.left, rect.top + shadowHeight, rect.right, rect.bottom)
             val shadowAlpha = if (isLightBase) {
-                (85 * clampedIntensity).toInt().coerceIn(0, 255)
+                (40 * clampedIntensity).toInt().coerceIn(0, 255)
             } else {
-                (130 * clampedIntensity).toInt().coerceIn(0, 255)
+                (65 * clampedIntensity).toInt().coerceIn(0, 255)
             }
             shadowPaint.color = Color.argb(shadowAlpha, 0, 0, 0)
             if (isCircle) {
@@ -100,15 +100,26 @@ object LiquidGlassHelper {
             }
         }
 
-        // 2. Translucent Frosted Glass Body with Vertical Lighting Gradient
-        val topBoost = if (isPressed) 0.22f else 0.14f
-        val botShade = if (isPressed) 0.05f else 0.06f
-        val topColor = ColorUtils.blendARGB(baseColor, Color.WHITE, topBoost * clampedIntensity)
-        val botColor = if (isPressed) {
+        // 2. Translucent Liquid Glass Body with Vertical Refraction Gradient (Angle 270)
+        // Pressed state: translucent fill increases opacity for tactile capsule feedback
+        val baseAlpha = Color.alpha(baseColor)
+        val activeAlpha = if (isPressed) {
+            ((baseAlpha * 1.25f) + 30).toInt().coerceIn(0, 255)
+        } else {
+            baseAlpha
+        }
+
+        val topBoost = if (isPressed) (if (isLightBase) 0.22f else 0.18f) else (if (isLightBase) 0.14f else 0.10f)
+        val botShade = if (isPressed) 0.04f else 0.08f
+        val rawTopColor = ColorUtils.blendARGB(baseColor, Color.WHITE, topBoost * clampedIntensity)
+        val rawBotColor = if (isPressed) {
             ColorUtils.blendARGB(baseColor, Color.WHITE, 0.08f * clampedIntensity)
         } else {
             ColorUtils.blendARGB(baseColor, Color.BLACK, botShade * clampedIntensity)
         }
+
+        val topColor = ColorUtils.setAlphaComponent(rawTopColor, activeAlpha)
+        val botColor = ColorUtils.setAlphaComponent(rawBotColor, activeAlpha)
 
         val bodyShader = LinearGradient(
             keyFace.left, keyFace.top,
@@ -125,10 +136,11 @@ object LiquidGlassHelper {
             canvas.drawRoundRect(keyFace, faceRadius, faceRadius, fillPaint)
         }
 
-        // 3. Apple Specular Liquid Sheen (Top Gloss Highlight)
-        val highlightHeight = keyFace.height() * (if (isPressed) 0.48f else 0.40f)
-        val topSpecularAlpha = ((if (isPressed) 150 else 110) * clampedIntensity).toInt().coerceIn(0, 255)
-        val midSpecularAlpha = ((if (isPressed) 45 else 28) * clampedIntensity).toInt().coerceIn(0, 255)
+        // 3. Specular Liquid Sheen (Inner Top Highlight: #55FFFFFF Light, #25FFFFFF Dark)
+        val highlightHeight = keyFace.height() * (if (isPressed) 0.48f else 0.42f)
+        val baseSpecularAlpha = if (isLightBase) 0x55 else 0x25
+        val topSpecularAlpha = ((if (isPressed) baseSpecularAlpha * 1.35f else baseSpecularAlpha.toFloat()) * clampedIntensity).toInt().coerceIn(0, 255)
+        val midSpecularAlpha = (topSpecularAlpha * 0.35f).toInt().coerceIn(0, 255)
 
         val specularShader = LinearGradient(
             keyFace.left, keyFace.top,
@@ -155,16 +167,16 @@ object LiquidGlassHelper {
         canvas.drawRect(keyFace.left, keyFace.top, keyFace.right, keyFace.top + highlightHeight, specularPaint)
         canvas.restore()
 
-        // 4. Refraction Glass Rim (Crisp Apple Beveled Edge)
-        val strokeWidth = (0.85f * density.coerceIn(1f, 2f)).coerceIn(0.8f, 2.0f)
+        // 4. Refraction Glass Rim (Crisp 1dp Beveled Edge)
+        val strokeWidth = (1.0f * density.coerceIn(1.0f, 1.5f)).coerceIn(1.0f, 2.0f)
         strokePaint.strokeWidth = strokeWidth
 
-        val topRimAlpha = ((if (isPressed) 225 else 195) * clampedIntensity).toInt().coerceIn(0, 255)
-        val sideRimAlpha = ((if (isPressed) 85 else 65) * clampedIntensity).toInt().coerceIn(0, 255)
+        val topRimAlpha = ((if (isPressed) baseSpecularAlpha * 1.5f else baseSpecularAlpha.toFloat()) * 1.6f * clampedIntensity).toInt().coerceIn(0, 255)
+        val sideRimAlpha = (topRimAlpha * 0.40f).toInt().coerceIn(0, 255)
         val botRimAlpha = if (isLightBase) {
-            ((if (isPressed) 70 else 45) * clampedIntensity).toInt().coerceIn(0, 255)
+            ((if (isPressed) 45 else 25) * clampedIntensity).toInt().coerceIn(0, 255)
         } else {
-            ((if (isPressed) 110 else 75) * clampedIntensity).toInt().coerceIn(0, 255)
+            ((if (isPressed) 60 else 35) * clampedIntensity).toInt().coerceIn(0, 255)
         }
         val botRimColor = if (isLightBase) Color.argb(botRimAlpha, 0, 0, 0) else Color.argb(botRimAlpha, 255, 255, 255)
 
@@ -176,7 +188,7 @@ object LiquidGlassHelper {
                 Color.argb(sideRimAlpha, 255, 255, 255),
                 botRimColor
             ),
-            floatArrayOf(0f, 0.52f, 1f),
+            floatArrayOf(0f, 0.50f, 1f),
             Shader.TileMode.CLAMP
         )
         strokePaint.shader = rimShader

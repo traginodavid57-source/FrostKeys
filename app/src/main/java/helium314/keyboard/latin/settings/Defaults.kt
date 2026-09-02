@@ -216,6 +216,7 @@ object Defaults {
     const val PREF_FROSTED_DUST_ALPHA = 5f
     const val PREF_LIQUID_GLASS_INTENSITY = 75
     const val PREF_LIQUID_GLASS_INTENSITY_NIGHT = 75
+    const val PREF_LIQUID_GLASS_ACCENT = "electric_blue"
     const val PREF_FROSTED_DUST_ALPHA_NIGHT = 5f
 
     const val LIMIT_EXPENSIVE_RENDERING = false
