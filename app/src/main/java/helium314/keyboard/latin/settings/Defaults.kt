@@ -58,6 +58,7 @@ object Defaults {
     const val PREF_SUGGEST_EMOJIS = true
     const val PREF_INLINE_EMOJI_SEARCH = true
     const val PREF_SHOW_EMOJI_DESCRIPTIONS = true
+    const val PREF_EMOJI_KITCHEN_ENABLED = true
     const val PREF_PERSISTENT_EMOJI_ROW = false
     @JvmField
     var PREF_POPUP_ON = true

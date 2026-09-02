@@ -24,6 +24,8 @@
     <string name="use_double_space_period_summary">"Tocar duas vezes na barra de espaço insere um ponto seguido de espaço"</string>
     <string name="auto_cap">"Capitalização automática"</string>
     <string name="auto_cap_summary">"Iniciar a primeira palavra de cada frase com letra maiúscula"</string>
+    <string name="emoji_kitchen_title">"Emoji Kitchen"</string>
+    <string name="emoji_kitchen_summary">"Exibir sugestões de figurinhas combinadas do Emoji Kitchen ao inserir emojis"</string>
     <string name="edit_personal_dictionary">"Dicionário pessoal"</string>
     <string name="main_dictionary">"Dicionário principal"</string>
     <string name="prefs_show_suggestions">"Mostrar sugestões de correção"</string>

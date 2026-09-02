@@ -402,6 +402,8 @@ public class KeyboardView extends View {
                 frostedColorType = ColorType.SPACE_BAR_BACKGROUND;
             } else if (key.hasActionKeyBackground()) {
                 frostedColorType = ColorType.ENTER_KEY_BACKGROUND;
+            } else if (key.isShift() && isShifted(getKeyboard())) {
+                frostedColorType = ColorType.ACCENT;
             } else if (isSpecialKey(key)) {
                 frostedColorType = ColorType.SPECIAL_KEY_BACKGROUND;
             } else {
@@ -458,12 +460,12 @@ public class KeyboardView extends View {
                 final float yOffset = (bgHeight - targetBgHeight) * 0.5f;
                 final RectF circleRect = new RectF((bgWidth - targetBgHeight) * 0.5f, yOffset, (bgWidth + targetBgHeight) * 0.5f, yOffset + targetBgHeight);
                 LiquidGlassHelper.INSTANCE.drawLiquidGlassKey(canvas, circleRect, circleRadius, baseColor, key.isPressed() || key.isLocked(), intensity, true);
-            } else if (isSpaceBar || isEnterKey || isRoundedStyle) {
+            } else if (isRoundedStyle) {
                 final float cornerRadius = bgHeight * 0.5f;
                 LiquidGlassHelper.INSTANCE.drawLiquidGlassKey(canvas, rect, cornerRadius, baseColor, key.isPressed() || key.isLocked(), intensity, false);
             } else {
                 final float density = getResources().getDisplayMetrics().density;
-                final float cornerRadius = 8f * density;
+                final float cornerRadius = 6.0f * density;
                 LiquidGlassHelper.INSTANCE.drawLiquidGlassKey(canvas, rect, cornerRadius, baseColor, key.isPressed() || key.isLocked(), intensity, false);
             }
             canvas.translate(-bgX, -bgY);
@@ -1065,6 +1067,15 @@ public class KeyboardView extends View {
                 || code == KeyCode.EMOJI
                 || code == Constants.CODE_PERIOD
                 || code == KeyCode.DELETE;
+    }
+
+    private boolean isShifted(final Keyboard keyboard) {
+        if (keyboard == null) return false;
+        final int id = keyboard.mId.mElementId;
+        return id == KeyboardId.ELEMENT_ALPHABET_MANUAL_SHIFTED
+                || id == KeyboardId.ELEMENT_ALPHABET_SHIFT_LOCKED
+                || id == KeyboardId.ELEMENT_ALPHABET_AUTOMATIC_SHIFTED
+                || id == KeyboardId.ELEMENT_ALPHABET_SHIFT_LOCK_SHIFTED;
     }
 
     private void setKeyIconColor(Key key, Drawable icon, Keyboard keyboard) {

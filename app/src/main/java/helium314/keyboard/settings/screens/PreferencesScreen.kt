@@ -75,6 +75,7 @@ fun PreferencesScreen(
             Settings.PREF_KEYPRESS_SOUND_VOLUME else null,
         Settings.PREF_SAVE_SUBTYPE_PER_APP,
         Settings.PREF_SHOW_EMOJI_DESCRIPTIONS,
+        Settings.PREF_EMOJI_KITCHEN_ENABLED,
         R.string.settings_category_additional_keys,
         Settings.PREF_SHOW_NUMBER_ROW,
         if (enabledSubtypes.any { it.locale().language in localesWithLocalizedNumberRow })
@@ -137,6 +138,9 @@ fun createPreferencesSettings(context: Context) = listOf(
     },
     Setting(context, Settings.PREF_SHOW_EMOJI_DESCRIPTIONS, R.string.show_emoji_descriptions) {
         SwitchPreferenceWithEmojiDictWarning(it, Defaults.PREF_SHOW_EMOJI_DESCRIPTIONS)
+    },
+    Setting(context, Settings.PREF_EMOJI_KITCHEN_ENABLED, R.string.emoji_kitchen_title, R.string.emoji_kitchen_summary) {
+        SwitchPreference(it, Defaults.PREF_EMOJI_KITCHEN_ENABLED)
     },
     Setting(context, Settings.PREF_SHOW_NUMBER_ROW, R.string.number_row, R.string.number_row_summary) {
         SwitchPreference(it, Defaults.PREF_SHOW_NUMBER_ROW) { KeyboardSwitcher.getInstance().setThemeNeedsReload() }

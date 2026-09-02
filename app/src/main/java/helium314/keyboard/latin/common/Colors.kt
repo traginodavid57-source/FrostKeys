@@ -543,7 +543,8 @@ class DefaultColors (
 
     override fun get(color: ColorType): Int = when (color) {
         TOOL_BAR_KEY_ENABLED_BACKGROUND, EMOJI_CATEGORY_SELECTED, ACTION_KEY_BACKGROUND,
-            CLIPBOARD_PIN, SHIFT_KEY_ICON -> accent
+            CLIPBOARD_PIN -> accent
+        SHIFT_KEY_ICON -> if (isLiquidGlass) Color.WHITE else accent
         SPECIAL_KEY_BACKGROUND -> specialKeyBackground
         ENTER_KEY_BACKGROUND -> enterKeyBackground
         AUTOFILL_BACKGROUND_CHIP -> if (isColorDark(background)) adjustLuminosityAndKeepAlpha(background, 0.15f) else (if (themeStyle == STYLE_MATERIAL && !hasKeyBorders) background else adjustedBackground)

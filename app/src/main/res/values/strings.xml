@@ -32,6 +32,8 @@
     <string name="emoji_dictionary_required">An emoji dictionary is required for this feature to work. Dictionaries in .dict format can be downloaded %s.</string>
     <!-- Option to show emoji descriptions on long press -->
     <string name="show_emoji_descriptions">Show emoji description on long press</string>
+    <string name="emoji_kitchen_title">Emoji Kitchen</string>
+    <string name="emoji_kitchen_summary">Show combined sticker suggestions when inserting emojis</string>
     <!-- Option to control whether or not to show a popup with a larger font on each key press. -->
     <string name="popup_on_keypress">Popup on keypress</string>
     <!-- Option whether the keyboard can be hidden by swiping down on the toolbar -->

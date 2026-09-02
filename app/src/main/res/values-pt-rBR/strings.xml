@@ -23,6 +23,8 @@
     <string name="use_double_space_period_summary">Tocar duas vezes na barra de espaço insere um ponto seguido por um espaço</string>
     <string name="auto_cap">Maiúsculas automáticas</string>
     <string name="auto_cap_summary">Começar cada palavra de cada frase com letra maiúscula</string>
+    <string name="emoji_kitchen_title">Emoji Kitchen</string>
+    <string name="emoji_kitchen_summary">Exibir sugestões de figurinhas combinadas do Emoji Kitchen ao inserir emojis</string>
     <string name="prefs_block_potentially_offensive_title">Bloquear palavras ofensivas</string>
     <string name="prefs_block_potentially_offensive_summary">Não sugerir palavras potencialmente ofensivas</string>
     <string name="autocorrect">Correção automática</string>

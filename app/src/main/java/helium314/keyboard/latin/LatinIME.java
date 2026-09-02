@@ -1936,6 +1936,10 @@ public class LatinIME extends InputMethodService implements
                 mKeyboardSwitcher.getCurrentKeyboardScript(), mHandler);
         updateStateAfterInputTransaction(completeInputTransaction);
         mKeyboardSwitcher.onEvent(event, getCurrentAutoCapsState(), getCurrentRecapitalizeState());
+        if (mSettings.getCurrent().mEmojiKitchenEnabled
+                && helium314.keyboard.latin.emojikitchen.EmojiKitchenHelper.INSTANCE.isEmojiCodePoint(event.getCodePoint())) {
+            tryShowEmojiKitchenSuggestion();
+        }
     }
 
     public void onTextInput(final String rawText) {
@@ -1947,6 +1951,10 @@ public class LatinIME extends InputMethodService implements
         mInputLogic.restartSuggestionsOnWordTouchedByCursor(mSettings.getCurrent(),
                 mKeyboardSwitcher.getCurrentKeyboardScript());
         mKeyboardSwitcher.onEvent(event, getCurrentAutoCapsState(), getCurrentRecapitalizeState());
+        if (mSettings.getCurrent().mEmojiKitchenEnabled
+                && helium314.keyboard.latin.emojikitchen.EmojiKitchenHelper.INSTANCE.containsEmoji(rawText)) {
+            tryShowEmojiKitchenSuggestion();
+        }
     }
 
     public void onStartBatchInput() {
@@ -2096,6 +2104,45 @@ public class LatinIME extends InputMethodService implements
         return false;
     }
 
+    private CharSequence mEmojiKitchenDismissedText = null;
+
+    public void dismissEmojiKitchenSuggestion() {
+        final InputConnection ic = getCurrentInputConnection();
+        if (ic != null) {
+            mEmojiKitchenDismissedText = ic.getTextBeforeCursor(25, 0);
+        }
+        removeExternalSuggestions();
+    }
+
+    public boolean tryShowEmojiKitchenSuggestion() {
+        if (!mSettings.getCurrent().mEmojiKitchenEnabled) {
+            return false;
+        }
+        final InputConnection ic = getCurrentInputConnection();
+        if (ic == null || !hasSuggestionStripView()) {
+            return false;
+        }
+        final CharSequence textBeforeCursor = ic.getTextBeforeCursor(25, 0);
+        if (TextUtils.isEmpty(textBeforeCursor)) {
+            return false;
+        }
+        if (mEmojiKitchenDismissedText != null && TextUtils.equals(textBeforeCursor, mEmojiKitchenDismissedText)) {
+            return false;
+        }
+        mEmojiKitchenDismissedText = null;
+        final helium314.keyboard.latin.emojikitchen.TextCombosResult result =
+                helium314.keyboard.latin.emojikitchen.EmojiKitchenHelper.INSTANCE.getCombinationsForText(this, textBeforeCursor, 30);
+        if (result == null || result.getCombos().isEmpty()) {
+            return false;
+        }
+        final helium314.keyboard.latin.emojikitchen.EmojiKitchenSuggestionView view =
+                new helium314.keyboard.latin.emojikitchen.EmojiKitchenSuggestionView(
+                        this, this, result.getEmojis(), result.getCombos(), result.getCharsCount()
+                );
+        mSuggestionStripView.setExternalSuggestionView(view, false);
+        return true;
+    }
+
     // This will first try showing a clipboard suggestion. On success, the toolbar
     // will be hidden
     // if the "Auto hide toolbar" is enabled. Otherwise, an empty suggestion strip
@@ -2109,6 +2156,11 @@ public class LatinIME extends InputMethodService implements
         final SettingsValues currentSettings = mSettings.getCurrent();
         if (tryShowClipboardSuggestion()) {
             // clipboard suggestion has been set
+            if (hasSuggestionStripView() && currentSettings.mAutoHideToolbar)
+                mSuggestionStripView.setToolbarVisibility(false);
+            return;
+        }
+        if (tryShowEmojiKitchenSuggestion()) {
             if (hasSuggestionStripView() && currentSettings.mAutoHideToolbar)
                 mSuggestionStripView.setToolbarVisibility(false);
             return;

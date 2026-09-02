@@ -64,6 +64,7 @@ public class SettingsValues {
     public final boolean mSuggestEmojis;
     public final boolean mInlineEmojiSearch;
     public final boolean mShowEmojiDescriptions;
+    public final boolean mEmojiKitchenEnabled;
     public final boolean mKeyPreviewPopupOn;
     public final boolean mShowsVoiceInputKey;
     public final boolean mLanguageSwitchKeyToOtherImes;
@@ -201,6 +202,7 @@ public class SettingsValues {
         mSuggestEmojis = prefs.getBoolean(Settings.PREF_SUGGEST_EMOJIS, Defaults.PREF_SUGGEST_EMOJIS);
         mInlineEmojiSearch = prefs.getBoolean(Settings.PREF_INLINE_EMOJI_SEARCH, Defaults.PREF_INLINE_EMOJI_SEARCH);
         mShowEmojiDescriptions = prefs.getBoolean(Settings.PREF_SHOW_EMOJI_DESCRIPTIONS, Defaults.PREF_SHOW_EMOJI_DESCRIPTIONS);
+        mEmojiKitchenEnabled = prefs.getBoolean(Settings.PREF_EMOJI_KITCHEN_ENABLED, Defaults.PREF_EMOJI_KITCHEN_ENABLED);
         mKeyPreviewPopupOn = prefs.getBoolean(Settings.PREF_POPUP_ON, Defaults.PREF_POPUP_ON);
         mSlidingKeyInputPreviewEnabled = prefs.getBoolean(
                 DebugSettings.PREF_SLIDING_KEY_INPUT_PREVIEW, Defaults.PREF_SLIDING_KEY_INPUT_PREVIEW);

@@ -7,12 +7,9 @@ import android.graphics.Color
 import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
-import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
-import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
-import android.os.Build
 import android.view.View
 import androidx.core.graphics.ColorUtils
 import helium314.keyboard.latin.settings.Defaults
@@ -33,7 +30,7 @@ object LiquidGlassHelper {
         style = Paint.Style.STROKE
     }
 
-    private val pressGlowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    private val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
     }
 
@@ -54,8 +51,8 @@ object LiquidGlassHelper {
     }
 
     /**
-     * Renders high-quality 3D Liquid Glass on a key with specular highlight,
-     * refractive edge borders, and press reaction glow.
+     * Renders Apple-style 3D Liquid Glass keycaps with physical bottom shelf depth,
+     * vertical ambient light illumination, liquid specular sheen, and crisp refraction rim.
      */
     @JvmStatic
     @JvmOverloads
@@ -71,34 +68,71 @@ object LiquidGlassHelper {
         if (rect.width() <= 0 || rect.height() <= 0) return
 
         val clampedIntensity = intensity.coerceIn(0.1f, 1.0f)
-        val density = rect.width() / 40f // approx scaling factor
+        val density = (rect.width() / 36f).coerceIn(1.0f, 3.0f)
 
-        // 1. Draw Translucent Base Body
-        val effectiveBaseColor = if (isPressed) {
-            ColorUtils.blendARGB(baseColor, Color.WHITE, 0.18f * clampedIntensity)
-        } else {
-            baseColor
+        // 1. Apple 3D Keycap Bottom Shelf / Physical Depth
+        val shadowHeight = (1.30f * density).coerceIn(1.5f, 4.0f)
+        val isLightBase = ColorUtils.calculateLuminance(baseColor) > 0.45
+
+        val pressOffset = if (isPressed) shadowHeight * 0.75f else 0f
+        val keyFace = RectF(
+            rect.left,
+            rect.top + pressOffset,
+            rect.right,
+            rect.bottom - (shadowHeight - pressOffset)
+        )
+        val faceRadius = Math.max(0f, cornerRadius - 0.5f)
+
+        // Bottom shadow (shelf) visible under floating keycap
+        if (!isPressed) {
+            val shadowRect = RectF(rect.left, rect.top + shadowHeight, rect.right, rect.bottom)
+            val shadowAlpha = if (isLightBase) {
+                (85 * clampedIntensity).toInt().coerceIn(0, 255)
+            } else {
+                (130 * clampedIntensity).toInt().coerceIn(0, 255)
+            }
+            shadowPaint.color = Color.argb(shadowAlpha, 0, 0, 0)
+            if (isCircle) {
+                val r = Math.min(shadowRect.width(), shadowRect.height()) * 0.5f
+                canvas.drawCircle(shadowRect.centerX(), shadowRect.centerY(), r, shadowPaint)
+            } else {
+                canvas.drawRoundRect(shadowRect, cornerRadius, cornerRadius, shadowPaint)
+            }
         }
-        fillPaint.color = effectiveBaseColor
+
+        // 2. Translucent Frosted Glass Body with Vertical Lighting Gradient
+        val topBoost = if (isPressed) 0.22f else 0.14f
+        val botShade = if (isPressed) 0.05f else 0.06f
+        val topColor = ColorUtils.blendARGB(baseColor, Color.WHITE, topBoost * clampedIntensity)
+        val botColor = if (isPressed) {
+            ColorUtils.blendARGB(baseColor, Color.WHITE, 0.08f * clampedIntensity)
+        } else {
+            ColorUtils.blendARGB(baseColor, Color.BLACK, botShade * clampedIntensity)
+        }
+
+        val bodyShader = LinearGradient(
+            keyFace.left, keyFace.top,
+            keyFace.left, keyFace.bottom,
+            topColor, botColor,
+            Shader.TileMode.CLAMP
+        )
+        fillPaint.shader = bodyShader
+
         if (isCircle) {
-            val cx = rect.centerX()
-            val cy = rect.centerY()
-            val r = Math.min(rect.width(), rect.height()) * 0.5f
-            canvas.drawCircle(cx, cy, r, fillPaint)
+            val r = Math.min(keyFace.width(), keyFace.height()) * 0.5f
+            canvas.drawCircle(keyFace.centerX(), keyFace.centerY(), r, fillPaint)
         } else {
-            canvas.drawRoundRect(rect, cornerRadius, cornerRadius, fillPaint)
+            canvas.drawRoundRect(keyFace, faceRadius, faceRadius, fillPaint)
         }
 
-        // 2. Specular Top Glare (Reflective Glass Sheen)
-        val topHighlightHeight = rect.height() * (if (isPressed) 0.55f else 0.48f)
-        val topSpecularAlpha = ((if (isPressed) 160 else 115) * clampedIntensity).toInt().coerceIn(0, 255)
-        val midSpecularAlpha = ((if (isPressed) 60 else 30) * clampedIntensity).toInt().coerceIn(0, 255)
+        // 3. Apple Specular Liquid Sheen (Top Gloss Highlight)
+        val highlightHeight = keyFace.height() * (if (isPressed) 0.48f else 0.40f)
+        val topSpecularAlpha = ((if (isPressed) 150 else 110) * clampedIntensity).toInt().coerceIn(0, 255)
+        val midSpecularAlpha = ((if (isPressed) 45 else 28) * clampedIntensity).toInt().coerceIn(0, 255)
 
         val specularShader = LinearGradient(
-            rect.left,
-            rect.top,
-            rect.left,
-            rect.top + topHighlightHeight,
+            keyFace.left, keyFace.top,
+            keyFace.left, keyFace.top + highlightHeight,
             intArrayOf(
                 Color.argb(topSpecularAlpha, 255, 255, 255),
                 Color.argb(midSpecularAlpha, 255, 255, 255),
@@ -109,85 +143,56 @@ object LiquidGlassHelper {
         )
         specularPaint.shader = specularShader
 
+        canvas.save()
+        path.reset()
         if (isCircle) {
-            val cx = rect.centerX()
-            val cy = rect.centerY()
-            val r = Math.min(rect.width(), rect.height()) * 0.5f
-            canvas.save()
-            path.reset()
-            path.addCircle(cx, cy, r, Path.Direction.CW)
-            canvas.clipPath(path)
-            canvas.drawRect(rect.left, rect.top, rect.right, rect.top + topHighlightHeight, specularPaint)
-            canvas.restore()
+            val r = Math.min(keyFace.width(), keyFace.height()) * 0.5f
+            path.addCircle(keyFace.centerX(), keyFace.centerY(), r, Path.Direction.CW)
         } else {
-            canvas.save()
-            path.reset()
-            path.addRoundRect(rect, cornerRadius, cornerRadius, Path.Direction.CW)
-            canvas.clipPath(path)
-            canvas.drawRect(rect.left, rect.top, rect.right, rect.top + topHighlightHeight, specularPaint)
-            canvas.restore()
+            path.addRoundRect(keyFace, faceRadius, faceRadius, Path.Direction.CW)
         }
+        canvas.clipPath(path)
+        canvas.drawRect(keyFace.left, keyFace.top, keyFace.right, keyFace.top + highlightHeight, specularPaint)
+        canvas.restore()
 
-        // 3. Press Glow / Internal Liquid Bloom
-        if (isPressed) {
-            val cx = rect.centerX()
-            val cy = rect.centerY()
-            val maxR = Math.max(rect.width(), rect.height()) * 0.6f
-            val pressBloomAlpha = (110 * clampedIntensity).toInt().coerceIn(0, 255)
-
-            val glowShader = RadialGradient(
-                cx,
-                cy,
-                maxR,
-                Color.argb(pressBloomAlpha, 255, 255, 255),
-                Color.argb(0, 255, 255, 255),
-                Shader.TileMode.CLAMP
-            )
-            pressGlowPaint.shader = glowShader
-            if (isCircle) {
-                canvas.drawCircle(cx, cy, Math.min(rect.width(), rect.height()) * 0.5f, pressGlowPaint)
-            } else {
-                canvas.drawRoundRect(rect, cornerRadius, cornerRadius, pressGlowPaint)
-            }
-        }
-
-        // 4. Refraction Glass Border (Dual Gradient Rim Lighting)
-        val strokeWidth = (1.1f * density.coerceIn(1f, 2.5f)).coerceIn(1f, 3.5f)
+        // 4. Refraction Glass Rim (Crisp Apple Beveled Edge)
+        val strokeWidth = (0.85f * density.coerceIn(1f, 2f)).coerceIn(0.8f, 2.0f)
         strokePaint.strokeWidth = strokeWidth
 
-        val topRimAlpha = ((if (isPressed) 210 else 170) * clampedIntensity).toInt().coerceIn(0, 255)
-        val midRimAlpha = ((if (isPressed) 100 else 65) * clampedIntensity).toInt().coerceIn(0, 255)
-        val botRimAlpha = ((if (isPressed) 140 else 90) * clampedIntensity).toInt().coerceIn(0, 255)
+        val topRimAlpha = ((if (isPressed) 225 else 195) * clampedIntensity).toInt().coerceIn(0, 255)
+        val sideRimAlpha = ((if (isPressed) 85 else 65) * clampedIntensity).toInt().coerceIn(0, 255)
+        val botRimAlpha = if (isLightBase) {
+            ((if (isPressed) 70 else 45) * clampedIntensity).toInt().coerceIn(0, 255)
+        } else {
+            ((if (isPressed) 110 else 75) * clampedIntensity).toInt().coerceIn(0, 255)
+        }
+        val botRimColor = if (isLightBase) Color.argb(botRimAlpha, 0, 0, 0) else Color.argb(botRimAlpha, 255, 255, 255)
 
         val rimShader = LinearGradient(
-            rect.left,
-            rect.top,
-            rect.left,
-            rect.bottom,
+            keyFace.left, keyFace.top,
+            keyFace.left, keyFace.bottom,
             intArrayOf(
                 Color.argb(topRimAlpha, 255, 255, 255),
-                Color.argb(midRimAlpha, 255, 255, 255),
-                Color.argb(botRimAlpha, 255, 255, 255)
+                Color.argb(sideRimAlpha, 255, 255, 255),
+                botRimColor
             ),
-            floatArrayOf(0f, 0.55f, 1f),
+            floatArrayOf(0f, 0.52f, 1f),
             Shader.TileMode.CLAMP
         )
         strokePaint.shader = rimShader
 
         val inset = strokeWidth * 0.5f
         val strokeRect = RectF(
-            rect.left + inset,
-            rect.top + inset,
-            rect.right - inset,
-            rect.bottom - inset
+            keyFace.left + inset,
+            keyFace.top + inset,
+            keyFace.right - inset,
+            keyFace.bottom - inset
         )
-        val strokeRadius = Math.max(0f, cornerRadius - inset)
+        val strokeRadius = Math.max(0f, faceRadius - inset)
 
         if (isCircle) {
-            val cx = strokeRect.centerX()
-            val cy = strokeRect.centerY()
             val r = Math.min(strokeRect.width(), strokeRect.height()) * 0.5f
-            canvas.drawCircle(cx, cy, r, strokePaint)
+            canvas.drawCircle(strokeRect.centerX(), strokeRect.centerY(), r, strokePaint)
         } else {
             canvas.drawRoundRect(strokeRect, strokeRadius, strokeRadius, strokePaint)
         }
@@ -198,8 +203,8 @@ object LiquidGlassHelper {
      */
     fun applyLiquidGlassToView(view: View, baseColor: Int, cornerRadiusPx: Float, intensity: Float = 0.75f) {
         val clampedIntensity = intensity.coerceIn(0.1f, 1.0f)
-        val strokeColor = Color.argb((160 * clampedIntensity).toInt(), 255, 255, 255)
-        val strokeWidth = (view.resources.displayMetrics.density * 1.2f).toInt().coerceAtLeast(1)
+        val strokeColor = Color.argb((175 * clampedIntensity).toInt(), 255, 255, 255)
+        val strokeWidth = (view.resources.displayMetrics.density * 1.0f).toInt().coerceAtLeast(1)
 
         val drawable = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
