@@ -403,7 +403,7 @@ public class KeyboardView extends View {
             } else if (key.hasActionKeyBackground()) {
                 frostedColorType = ColorType.ENTER_KEY_BACKGROUND;
             } else if (key.isShift() && isShifted(getKeyboard())) {
-                frostedColorType = ColorType.ACCENT;
+                frostedColorType = ColorType.ACTION_KEY_BACKGROUND;
             } else if (isSpecialKey(key)) {
                 frostedColorType = ColorType.SPECIAL_KEY_BACKGROUND;
             } else {

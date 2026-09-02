@@ -30,6 +30,7 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.os.Process;
 import android.os.Trace;
+import android.text.TextUtils;
 import android.util.PrintWriterPrinter;
 import android.util.Printer;
 import android.view.KeyEvent;
