@@ -92,7 +92,7 @@ class EmojiKitchenSuggestionView(
                 isFocusable = true
 
                 val shape = GradientDrawable().apply {
-                    cornerRadius = 8f.dpToPx(resources).toFloat()
+                    cornerRadius = 8.dpToPx(resources).toFloat()
                     setColor(Color.argb(20, 255, 255, 255))
                 }
                 background = shape

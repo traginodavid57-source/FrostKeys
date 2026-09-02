@@ -205,6 +205,56 @@ private constructor(val themeId: Int, @JvmField val mStyleId: Int) {
                 THEME_FROSTED_GLASS, THEME_LIQUID_GLASS -> {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         val isLiquidGlassTheme = themeName == THEME_LIQUID_GLASS
+                        val liquidIntensityPref = livePreviewValues?.liquidGlassIntensity
+                            ?: (if (isNight) prefs.getIntSafe(Settings.PREF_LIQUID_GLASS_INTENSITY_NIGHT, Defaults.PREF_LIQUID_GLASS_INTENSITY_NIGHT)
+                                else prefs.getIntSafe(Settings.PREF_LIQUID_GLASS_INTENSITY, Defaults.PREF_LIQUID_GLASS_INTENSITY))
+                        val liquidIntensityVal = (liquidIntensityPref / 100f).coerceIn(0f, 1f)
+
+                        val keyTransparency = livePreviewValues?.keyTransparency
+                            ?: (if (isNight) prefs.getIntSafe(Settings.PREF_FROSTED_KEY_TRANSPARENCY_NIGHT, Defaults.PREF_FROSTED_KEY_TRANSPARENCY_NIGHT)
+                                else prefs.getIntSafe(Settings.PREF_FROSTED_KEY_TRANSPARENCY, Defaults.PREF_FROSTED_KEY_TRANSPARENCY))
+                        val colorBlendVal = (livePreviewValues?.colorBlend
+                            ?: (if (isNight) prefs.getIntSafe(Settings.PREF_FROSTED_COLOR_BLEND_NIGHT, Defaults.PREF_FROSTED_COLOR_BLEND_NIGHT)
+                                else prefs.getIntSafe(Settings.PREF_FROSTED_COLOR_BLEND, Defaults.PREF_FROSTED_COLOR_BLEND))) / 100f
+                        val saturationMult = (livePreviewValues?.saturation
+                            ?: (if (isNight) prefs.getIntSafe(Settings.PREF_FROSTED_SATURATION_NIGHT, Defaults.PREF_FROSTED_SATURATION_NIGHT)
+                                else prefs.getIntSafe(Settings.PREF_FROSTED_SATURATION, Defaults.PREF_FROSTED_SATURATION))) / 100f
+                        val bgTransparency = livePreviewValues?.bgTransparency
+                            ?: (if (isNight) prefs.getIntSafe(Settings.PREF_FROSTED_BG_TRANSPARENCY_NIGHT, Defaults.PREF_FROSTED_BG_TRANSPARENCY_NIGHT)
+                                else prefs.getIntSafe(Settings.PREF_FROSTED_BG_TRANSPARENCY, Defaults.PREF_FROSTED_BG_TRANSPARENCY))
+                        val specialVibrancyPref = livePreviewValues?.specialVibrancy
+                            ?: (if (isNight) prefs.getIntSafe(Settings.PREF_FROSTED_SPECIAL_VIBRANCY_NIGHT, Defaults.PREF_FROSTED_SPECIAL_VIBRANCY_NIGHT)
+                                else prefs.getIntSafe(Settings.PREF_FROSTED_SPECIAL_VIBRANCY, Defaults.PREF_FROSTED_SPECIAL_VIBRANCY))
+                        val specialVibrancyVal = specialVibrancyPref / 100f
+                        val alphabetVibrancyVal = (livePreviewValues?.alphabetVibrancy
+                            ?: (if (isNight) prefs.getIntSafe(Settings.PREF_FROSTED_ALPHABET_VIBRANCY_NIGHT, Defaults.PREF_FROSTED_ALPHABET_VIBRANCY_NIGHT)
+                                else prefs.getIntSafe(Settings.PREF_FROSTED_ALPHABET_VIBRANCY, Defaults.PREF_FROSTED_ALPHABET_VIBRANCY))) / 100f
+
+                        val boostSaturation = { color: Int ->
+                            val alpha = android.graphics.Color.alpha(color)
+                            val hsl = FloatArray(3)
+                            ColorUtils.colorToHSL(color, hsl)
+                            hsl[1] = (hsl[1] * saturationMult).coerceIn(0f, 1f)
+                            val saturatedColor = ColorUtils.HSLToColor(hsl)
+                            ColorUtils.setAlphaComponent(saturatedColor, alpha)
+                        }
+                        val boostSpecialSaturation = { color: Int ->
+                            val alpha = android.graphics.Color.alpha(color)
+                            val hsl = FloatArray(3)
+                            ColorUtils.colorToHSL(color, hsl)
+                            hsl[1] = (hsl[1] * specialVibrancyVal).coerceIn(0f, 1f)
+                            val saturatedColor = ColorUtils.HSLToColor(hsl)
+                            ColorUtils.setAlphaComponent(saturatedColor, alpha)
+                        }
+                        val boostAlphabetSaturation = { color: Int ->
+                            val alpha = android.graphics.Color.alpha(color)
+                            val hsl = FloatArray(3)
+                            ColorUtils.colorToHSL(color, hsl)
+                            hsl[1] = (hsl[1] * alphabetVibrancyVal).coerceIn(0f, 1f)
+                            val saturatedColor = ColorUtils.HSLToColor(hsl)
+                            ColorUtils.setAlphaComponent(saturatedColor, alpha)
+                        }
+                        val actionAlpha = (15 + (keyTransparency / 255f * 240)).toInt().coerceIn(0, 255)
 
                         val appleAccent = if (isNight) Color.rgb(10, 132, 255) else Color.rgb(0, 122, 255)
                         val systemAccentColor = if (isLiquidGlassTheme) appleAccent
