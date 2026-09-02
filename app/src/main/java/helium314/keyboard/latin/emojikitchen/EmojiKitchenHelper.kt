@@ -370,6 +370,7 @@ object EmojiKitchenHelper {
                         latinIME.currentInputConnection?.deleteSurroundingText(charsCountToDelete, 0)
                     }
                     latinIME.removeExternalSuggestions()
+                    helium314.keyboard.keyboard.KeyboardSwitcher.getInstance().emojiPalettesView?.dismissEmojiKitchen()
                 }
                 onComplete?.invoke(committed)
             }

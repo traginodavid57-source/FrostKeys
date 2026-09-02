@@ -589,6 +589,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
     fun setExternalSuggestionView(view: View?, addCloseButton: Boolean) {
         clear()
         isExternalSuggestionVisible = true
+        toolbarContainer.isVisible = false
         updateSuggestionContainersVisibility(true)
 
         if (addCloseButton) {
@@ -610,7 +611,7 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
             suggestionsStrip.addView(view)
         }
 
-        if (Settings.getValues().mAutoHideToolbar) setToolbarVisibility(false)
+        setToolbarVisibility(false)
     }
 
     fun setMoreSuggestionsHeight(remainingHeight: Int) {
@@ -940,13 +941,13 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
                 hasPinnedKeys &&
                 !isExternalSuggestionVisible &&
                 shouldPreferPinnedKeysOverPredictions()
-        val showSuggestionContent = showSuggestions && allowSuggestions &&
+        val showSuggestionContent = isExternalSuggestionVisible || (showSuggestions && allowSuggestions &&
                 !preferPinnedKeys &&
-                (isExternalSuggestionVisible || shouldShowSuggestionContent())
+                shouldShowSuggestionContent())
         val showChips = showSuggestionContent && !isExternalSuggestionVisible && shouldUseChipSuggestions()
         suggestionsStrip.isVisible = showSuggestionContent && !showChips
         suggestionsChipScroll.isVisible = showChips
-        pinnedKeys.isVisible = showSuggestions && allowPinnedKeys && !showSuggestionContent && hasPinnedKeys
+        pinnedKeys.isVisible = !isExternalSuggestionVisible && showSuggestions && allowPinnedKeys && !showSuggestionContent && hasPinnedKeys
     }
 
     private fun populatePinnedKeys(

@@ -103,6 +103,9 @@ class KeyboardActionListenerImpl(private val latinIME: LatinIME, private val inp
             KeyCode.RESIZE_KEYBOARD -> return KeyboardSwitcher.getInstance().enterResizeMode()
             KeyCode.TOGGLE_FLOATING_MODE -> return KeyboardSwitcher.getInstance().toggleFloatingMode()
             KeyCode.TEXT_EDIT -> return KeyboardSwitcher.getInstance().onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.TEXT_EDIT)
+            KeyCode.EMOJI -> return KeyboardSwitcher.getInstance().onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.EMOJI)
+            KeyCode.CLIPBOARD -> return KeyboardSwitcher.getInstance().onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.CLIPBOARD)
+            KeyCode.AI_TOOLS -> return KeyboardSwitcher.getInstance().onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.AI_TOOLS)
         }
         val mkv = keyboardSwitcher.mainKeyboardView
 

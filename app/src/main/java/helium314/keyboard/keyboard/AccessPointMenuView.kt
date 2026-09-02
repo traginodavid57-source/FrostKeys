@@ -15,6 +15,7 @@ import android.widget.GridLayout
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.FrameLayout
+import android.widget.Toast
 import android.content.Intent
 import androidx.core.graphics.drawable.DrawableCompat
 import helium314.keyboard.keyboard.internal.KeyboardIconsSet
@@ -143,14 +144,59 @@ class AccessPointMenuView @JvmOverloads constructor(
             // Whole tile is the touch target, not just the icon
             tile.setOnClickListener {
                 AudioAndHapticFeedbackManager.getInstance().performHapticAndAudioFeedback(helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode.NOT_SPECIFIED, tile, HapticEvent.KEY_PRESS)
-                if (key == ToolbarKey.TEXT_EDIT) {
-                    KeyboardSwitcher.getInstance().onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.TEXT_EDIT)
-                    return@setOnClickListener
-                }
-                if (key == ToolbarKey.FLOATING) {
-                    KeyboardSwitcher.getInstance().toggleFloatingMode()
-                    KeyboardSwitcher.getInstance().setAlphabetKeyboard()
-                    return@setOnClickListener
+                val switcher = KeyboardSwitcher.getInstance()
+                when (key) {
+                    ToolbarKey.TEXT_EDIT -> {
+                        switcher.onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.TEXT_EDIT)
+                        return@setOnClickListener
+                    }
+                    ToolbarKey.FLOATING -> {
+                        switcher.toggleFloatingMode()
+                        switcher.setAlphabetKeyboard()
+                        return@setOnClickListener
+                    }
+                    ToolbarKey.EMOJI -> {
+                        switcher.onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.EMOJI)
+                        return@setOnClickListener
+                    }
+                    ToolbarKey.CLIPBOARD -> {
+                        switcher.onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.CLIPBOARD)
+                        return@setOnClickListener
+                    }
+                    ToolbarKey.AI_TOOLS -> {
+                        switcher.onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.AI_TOOLS)
+                        return@setOnClickListener
+                    }
+                    ToolbarKey.STICKERS -> {
+                        val hasKlipy = helium314.keyboard.latin.cloud.CloudManager.getKlipyApiKey(context).isNotBlank()
+                        if (hasKlipy) {
+                            if (!switcher.isShowingKlipyPalettes) {
+                                switcher.onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.KLIPY)
+                            }
+                            if (switcher.isShowingKlipyPalettes) {
+                                switcher.klipyPalettesView?.selectTab("STICKER")
+                            }
+                        } else {
+                            switcher.onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.EMOJI)
+                            Toast.makeText(context, "Criador de figurinhas (Emoji Kitchen) ativo! Selecione emojis abaixo.", Toast.LENGTH_LONG).show()
+                        }
+                        return@setOnClickListener
+                    }
+                    ToolbarKey.GIFS -> {
+                        val hasKlipy = helium314.keyboard.latin.cloud.CloudManager.getKlipyApiKey(context).isNotBlank()
+                        if (hasKlipy) {
+                            if (!switcher.isShowingKlipyPalettes) {
+                                switcher.onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.KLIPY)
+                            }
+                            if (switcher.isShowingKlipyPalettes) {
+                                switcher.klipyPalettesView?.selectTab("GIF")
+                            }
+                        } else {
+                            Toast.makeText(context, "Configure a chave de API Klipy em Configurações > Nuvem para usar GIFs.", Toast.LENGTH_LONG).show()
+                        }
+                        return@setOnClickListener
+                    }
+                    else -> {}
                 }
                 val code = getCodeForToolbarKey(key)
                 if (code != helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode.UNSPECIFIED) {

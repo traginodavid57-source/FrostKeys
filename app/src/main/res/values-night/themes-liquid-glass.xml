@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <style name="KeyboardView.Liquid_Glass" parent="KeyboardView.Rounded_Base_Border">
+        <item name="keyBackground">@drawable/key_background_liquid_dark</item>
+        <item name="functionalKeyBackground">@drawable/key_background_liquid_functional_dark</item>
+        <item name="spacebarBackground">@drawable/key_background_liquid_spacebar_dark</item>
+    </style>
+
+    <style name="MainKeyboardView.Liquid_Glass" parent="MainKeyboardView.Rounded_Base_Border">
+        <item name="keyBackground">@drawable/key_background_liquid_dark</item>
+        <item name="functionalKeyBackground">@drawable/key_background_liquid_functional_dark</item>
+        <item name="spacebarBackground">@drawable/key_background_liquid_spacebar_dark</item>
+    </style>
+
+    <style name="EmojiPalettesView.Liquid_Glass" parent="EmojiPalettesView.Rounded_Base_Border">
+        <item name="keyBackground">@drawable/key_background_liquid_dark</item>
+        <item name="functionalKeyBackground">@drawable/key_background_liquid_functional_dark</item>
+        <item name="spacebarBackground">@drawable/key_background_liquid_spacebar_dark</item>
+    </style>
+
+    <style name="ClipboardHistoryView.Liquid_Glass" parent="ClipboardHistoryView.Rounded_Base_Border">
+        <item name="keyBackground">@drawable/key_background_liquid_dark</item>
+        <item name="functionalKeyBackground">@drawable/key_background_liquid_functional_dark</item>
+    </style>
+
+    <style name="PopupKeysKeyboardView.Liquid_Glass" parent="PopupKeysKeyboardView.Rounded_Base_Border">
+        <item name="keyBackground">@drawable/key_background_liquid_dark</item>
+    </style>
+</resources>

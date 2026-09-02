@@ -1780,6 +1780,10 @@ public final class KeyboardSwitcher implements KeyboardState.SwitchActions {
         return mEmojiPalettesView;
     }
 
+    public LatinIME getLatinIME() {
+        return mLatinIME;
+    }
+
     public KlipyPalettesView getKlipyPalettesView() {
         return mKlipyPalettesView;
     }

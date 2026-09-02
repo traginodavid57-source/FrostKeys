@@ -15,6 +15,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import coil.load
 import helium314.keyboard.event.HapticEvent
 import helium314.keyboard.keyboard.internal.keyboard_parser.floris.KeyCode
@@ -93,7 +94,9 @@ class EmojiKitchenSuggestionView(
 
                 val shape = GradientDrawable().apply {
                     cornerRadius = 8.dpToPx(resources).toFloat()
-                    setColor(Color.argb(20, 255, 255, 255))
+                    val isDark = ColorUtils.calculateLuminance(colors.get(ColorType.KEYBOARD_BACKGROUND)) < 0.5
+                    setColor(if (isDark) Color.argb(35, 255, 255, 255) else Color.argb(25, 0, 0, 0))
+                    setStroke(1.dpToPx(resources), if (isDark) Color.argb(55, 255, 255, 255) else Color.argb(35, 0, 0, 0))
                 }
                 background = shape
             }

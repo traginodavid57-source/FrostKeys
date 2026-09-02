@@ -35,7 +35,12 @@ import android.graphics.drawable.RippleDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.InsetDrawable;
 import android.content.res.ColorStateList;
-import androidx.core.graphics.ColorUtils;
+import android.widget.FrameLayout;
+import android.view.inputmethod.InputConnection;
+import helium314.keyboard.latin.LatinIME;
+import helium314.keyboard.latin.emojikitchen.EmojiKitchenHelper;
+import helium314.keyboard.latin.emojikitchen.EmojiKitchenSuggestionView;
+import helium314.keyboard.latin.emojikitchen.TextCombosResult;
 
 
 import androidx.annotation.NonNull;
@@ -111,6 +116,7 @@ public final class EmojiPalettesView extends LinearLayout
     private KeyboardActionListener mMainKeyboardActionListener = KeyboardActionListener.EMPTY_LISTENER;
     private final EmojiCategory mEmojiCategory;
     private RecyclerView mPager;
+    private FrameLayout mEmojiKitchenContainer;
     private MainKeyboardView mBottomRowKeyboard;
     private View mSearchBarContainer;
     private ImageButton mSearchBackButton;
@@ -218,6 +224,7 @@ public final class EmojiPalettesView extends LinearLayout
             }
         }
 
+        mEmojiKitchenContainer = findViewById(R.id.emoji_kitchen_container);
         mPager = findViewById(R.id.emoji_pager);
         mPager.setHasFixedSize(true);
         mPager.setItemAnimator(null);
@@ -452,8 +459,80 @@ public final class EmojiPalettesView extends LinearLayout
             mKeyboardActionListener.onCodeInput(code, NOT_A_COORDINATE, NOT_A_COORDINATE, false);
         }
         mKeyboardActionListener.onReleaseKey(code, false);
+        updateEmojiKitchen(key);
         if (Settings.getValues().mAlphaAfterEmojiInEmojiView)
             mKeyboardActionListener.onCodeInput(KeyCode.ALPHA, NOT_A_COORDINATE, NOT_A_COORDINATE, false);
+    }
+
+    private void initEmojiKitchenOnStart() {
+        if (mEmojiKitchenContainer == null || !Settings.getValues().mEmojiKitchenEnabled) {
+            if (mEmojiKitchenContainer != null) mEmojiKitchenContainer.setVisibility(View.GONE);
+            return;
+        }
+        final LatinIME latinIme = KeyboardSwitcher.getInstance().getLatinIME();
+        if (latinIme == null) {
+            mEmojiKitchenContainer.setVisibility(View.GONE);
+            return;
+        }
+        final InputConnection ic = latinIme.getCurrentInputConnection();
+        if (ic != null) {
+            final CharSequence text = ic.getTextBeforeCursor(25, 0);
+            if (text != null && text.length() > 0) {
+                showEmojiKitchenForText(text.toString());
+                return;
+            }
+        }
+        mEmojiKitchenContainer.setVisibility(View.GONE);
+    }
+
+    public void updateEmojiKitchen(final Key key) {
+        if (!Settings.getValues().mEmojiKitchenEnabled || mEmojiKitchenContainer == null) {
+            return;
+        }
+        final LatinIME latinIme = KeyboardSwitcher.getInstance().getLatinIME();
+        if (latinIme == null) return;
+        final InputConnection ic = latinIme.getCurrentInputConnection();
+        final CharSequence textBeforeCursor = ic != null ? ic.getTextBeforeCursor(25, 0) : null;
+        final String currentEmoji = (key.getCode() == KeyCode.MULTIPLE_CODE_POINTS && key.getOutputText() != null)
+                ? key.getOutputText()
+                : (key.getCode() > 0 ? helium314.keyboard.latin.common.StringUtils.newSingleCodePointString(key.getCode()) : null);
+        final String evalText;
+        if (textBeforeCursor != null && textBeforeCursor.length() > 0) {
+            evalText = textBeforeCursor.toString();
+        } else if (currentEmoji != null) {
+            evalText = currentEmoji;
+        } else {
+            return;
+        }
+        showEmojiKitchenForText(evalText);
+    }
+
+    public void showEmojiKitchenForText(final String evalText) {
+        if (!Settings.getValues().mEmojiKitchenEnabled || mEmojiKitchenContainer == null) {
+            if (mEmojiKitchenContainer != null) mEmojiKitchenContainer.setVisibility(View.GONE);
+            return;
+        }
+        final LatinIME latinIme = KeyboardSwitcher.getInstance().getLatinIME();
+        if (latinIme == null) return;
+        final TextCombosResult result = EmojiKitchenHelper.INSTANCE.getCombinationsForText(getContext(), evalText, 30);
+        if (result == null || result.getCombos().isEmpty()) {
+            mEmojiKitchenContainer.setVisibility(View.GONE);
+            mEmojiKitchenContainer.removeAllViews();
+            return;
+        }
+        mEmojiKitchenContainer.removeAllViews();
+        final EmojiKitchenSuggestionView view = new EmojiKitchenSuggestionView(
+                getContext(), latinIme, result.getEmojis(), result.getCombos(), result.getCharsCount()
+        );
+        mEmojiKitchenContainer.addView(view);
+        mEmojiKitchenContainer.setVisibility(View.VISIBLE);
+    }
+
+    public void dismissEmojiKitchen() {
+        if (mEmojiKitchenContainer != null) {
+            mEmojiKitchenContainer.setVisibility(View.GONE);
+            mEmojiKitchenContainer.removeAllViews();
+        }
     }
 
     @Override
@@ -499,6 +578,7 @@ public final class EmojiPalettesView extends LinearLayout
         params.updateParams(mEmojiLayoutParams.getBottomRowKeyboardHeight(), keyVisualAttr);
         setupSidePadding();
         initDictionaryFacilitator();
+        initEmojiKitchenOnStart();
     }
 
     public boolean isSearchMode() {
@@ -507,6 +587,7 @@ public final class EmojiPalettesView extends LinearLayout
 
     public void enterSearchMode() {
         initialize();
+        dismissEmojiKitchen();
 
         if (mSearchMode) {
             focusSearchField(true);

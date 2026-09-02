@@ -72,7 +72,11 @@ object LiquidGlassHelper {
 
         // 1. Apple / Clink Physical Bottom Shelf & Base Diffuse Shadow
         val shadowHeight = (1.20f * density).coerceIn(1.5f, 3.5f)
-        val isLightBase = ColorUtils.calculateLuminance(baseColor) > 0.45
+        val baseAlpha = Color.alpha(baseColor)
+        val hsl = FloatArray(3)
+        ColorUtils.colorToHSL(baseColor, hsl)
+        val hasColorTint = hsl[1] > 0.15f
+        val isDarkGlass = baseAlpha < 115 || ColorUtils.calculateLuminance(baseColor) <= 0.45
 
         val pressOffset = if (isPressed) shadowHeight * 0.70f else 0f
         val keyFace = RectF(
@@ -83,13 +87,13 @@ object LiquidGlassHelper {
         )
         val faceRadius = Math.max(0f, cornerRadius - 0.5f)
 
-        // Light diffuse shadow at the base to decouple keys from the background panel without losing transparency
+        // Diffuse ambient shadow at the base to lift glass keys from keyboard canvas
         if (!isPressed) {
             val shadowRect = RectF(rect.left, rect.top + shadowHeight, rect.right, rect.bottom)
-            val shadowAlpha = if (isLightBase) {
-                (40 * clampedIntensity).toInt().coerceIn(0, 255)
+            val shadowAlpha = if (isDarkGlass) {
+                (45 * clampedIntensity).toInt().coerceIn(0, 255)
             } else {
-                (65 * clampedIntensity).toInt().coerceIn(0, 255)
+                (35 * clampedIntensity).toInt().coerceIn(0, 255)
             }
             shadowPaint.color = Color.argb(shadowAlpha, 0, 0, 0)
             if (isCircle) {
@@ -100,26 +104,32 @@ object LiquidGlassHelper {
             }
         }
 
-        // 2. Translucent Liquid Glass Body with Vertical Refraction Gradient (Angle 270)
-        // Pressed state: translucent fill increases opacity for tactile capsule feedback
-        val baseAlpha = Color.alpha(baseColor)
+        // 2. Translucent Liquid Glass Body with Refraction Fill
+        // Pressed state: translucent fill lights up for tactile touch illumination
         val activeAlpha = if (isPressed) {
-            ((baseAlpha * 1.25f) + 30).toInt().coerceIn(0, 255)
+            if (isDarkGlass) {
+                ((baseAlpha * 1.8f) + 40).toInt().coerceIn(0, 255)
+            } else {
+                ((baseAlpha * 1.25f) + 30).toInt().coerceIn(0, 255)
+            }
         } else {
             baseAlpha
         }
 
-        val topBoost = if (isPressed) (if (isLightBase) 0.22f else 0.18f) else (if (isLightBase) 0.14f else 0.10f)
-        val botShade = if (isPressed) 0.04f else 0.08f
-        val rawTopColor = ColorUtils.blendARGB(baseColor, Color.WHITE, topBoost * clampedIntensity)
-        val rawBotColor = if (isPressed) {
-            ColorUtils.blendARGB(baseColor, Color.WHITE, 0.08f * clampedIntensity)
+        val topColor: Int
+        val botColor: Int
+        if (hasColorTint) {
+            val rawTop = ColorUtils.blendARGB(baseColor, Color.WHITE, (if (isPressed) 0.25f else 0.15f) * clampedIntensity)
+            val rawBot = ColorUtils.blendARGB(baseColor, Color.BLACK, (if (isPressed) 0.05f else 0.10f) * clampedIntensity)
+            topColor = ColorUtils.setAlphaComponent(rawTop, activeAlpha)
+            botColor = ColorUtils.setAlphaComponent(rawBot, activeAlpha)
+        } else if (isDarkGlass) {
+            topColor = Color.argb((activeAlpha + 14).coerceIn(0, 255), 255, 255, 255)
+            botColor = Color.argb((activeAlpha * 0.62f).toInt().coerceIn(0, 255), 255, 255, 255)
         } else {
-            ColorUtils.blendARGB(baseColor, Color.BLACK, botShade * clampedIntensity)
+            topColor = ColorUtils.setAlphaComponent(Color.WHITE, activeAlpha)
+            botColor = Color.argb((activeAlpha * 0.88f).toInt().coerceIn(0, 255), 232, 238, 248)
         }
-
-        val topColor = ColorUtils.setAlphaComponent(rawTopColor, activeAlpha)
-        val botColor = ColorUtils.setAlphaComponent(rawBotColor, activeAlpha)
 
         val bodyShader = LinearGradient(
             keyFace.left, keyFace.top,
@@ -136,11 +146,10 @@ object LiquidGlassHelper {
             canvas.drawRoundRect(keyFace, faceRadius, faceRadius, fillPaint)
         }
 
-        // 3. Specular Liquid Sheen (Inner Top Highlight: #55FFFFFF Light, #25FFFFFF Dark)
-        val highlightHeight = keyFace.height() * (if (isPressed) 0.48f else 0.42f)
-        val baseSpecularAlpha = if (isLightBase) 0x55 else 0x25
-        val topSpecularAlpha = ((if (isPressed) baseSpecularAlpha * 1.35f else baseSpecularAlpha.toFloat()) * clampedIntensity).toInt().coerceIn(0, 255)
-        val midSpecularAlpha = (topSpecularAlpha * 0.35f).toInt().coerceIn(0, 255)
+        // 3. Specular Liquid Sheen (Crisp Top Specular Highlight)
+        val highlightHeight = keyFace.height() * (if (isPressed) 0.46f else 0.40f)
+        val topSpecularAlpha = ((if (isPressed) 130 else 75) * clampedIntensity).toInt().coerceIn(0, 255)
+        val midSpecularAlpha = (topSpecularAlpha * 0.32f).toInt().coerceIn(0, 255)
 
         val specularShader = LinearGradient(
             keyFace.left, keyFace.top,
@@ -167,18 +176,24 @@ object LiquidGlassHelper {
         canvas.drawRect(keyFace.left, keyFace.top, keyFace.right, keyFace.top + highlightHeight, specularPaint)
         canvas.restore()
 
-        // 4. Refraction Glass Rim (Crisp 1dp Beveled Edge)
-        val strokeWidth = (1.0f * density.coerceIn(1.0f, 1.5f)).coerceIn(1.0f, 2.0f)
+        // 4. Refraction Glass Rim (Crisp 1dp Beveled Specular Border)
+        val strokeWidth = (1.0f * density.coerceIn(1.0f, 1.4f)).coerceIn(1.0f, 1.75f)
         strokePaint.strokeWidth = strokeWidth
 
-        val topRimAlpha = ((if (isPressed) baseSpecularAlpha * 1.5f else baseSpecularAlpha.toFloat()) * 1.6f * clampedIntensity).toInt().coerceIn(0, 255)
-        val sideRimAlpha = (topRimAlpha * 0.40f).toInt().coerceIn(0, 255)
-        val botRimAlpha = if (isLightBase) {
-            ((if (isPressed) 45 else 25) * clampedIntensity).toInt().coerceIn(0, 255)
+        val topRimAlpha: Int
+        val sideRimAlpha: Int
+        val botRimColor: Int
+        if (isDarkGlass) {
+            topRimAlpha = ((if (isPressed) 210 else 105) * clampedIntensity).toInt().coerceIn(0, 255)
+            sideRimAlpha = (topRimAlpha * 0.55f).toInt().coerceIn(0, 255)
+            val botRimAlpha = (topRimAlpha * 0.42f).toInt().coerceIn(0, 255)
+            botRimColor = Color.argb(botRimAlpha, 255, 255, 255)
         } else {
-            ((if (isPressed) 60 else 35) * clampedIntensity).toInt().coerceIn(0, 255)
+            topRimAlpha = ((if (isPressed) 220 else 165) * clampedIntensity).toInt().coerceIn(0, 255)
+            sideRimAlpha = (topRimAlpha * 0.45f).toInt().coerceIn(0, 255)
+            val botRimAlpha = ((if (isPressed) 50 else 30) * clampedIntensity).toInt().coerceIn(0, 255)
+            botRimColor = Color.argb(botRimAlpha, 0, 0, 0)
         }
-        val botRimColor = if (isLightBase) Color.argb(botRimAlpha, 0, 0, 0) else Color.argb(botRimAlpha, 255, 255, 255)
 
         val rimShader = LinearGradient(
             keyFace.left, keyFace.top,

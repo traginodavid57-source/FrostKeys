@@ -103,6 +103,12 @@
             android:layout_height="wrap_content" />
     </HorizontalScrollView>
 
+    <FrameLayout
+        android:id="@+id/emoji_kitchen_container"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:visibility="gone" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/emoji_pager"
         android:layout_width="match_parent"

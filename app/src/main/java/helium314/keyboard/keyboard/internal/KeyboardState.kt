@@ -643,6 +643,8 @@ class KeyboardState(private val switchActions: SwitchActions) {
             Log.d(TAG, "onEvent: code=${Constants.printableCode(code)} ${stateToString(autoCapsFlags, recapitalizeMode)}")
         }
 
+        onCodeInput(code, autoCapsFlags, recapitalizeMode)
+
         when (switchState) {
             SwitchState.SYMBOL ->
                 // Switch back to alpha keyboard mode if user types one or more non-space/enter

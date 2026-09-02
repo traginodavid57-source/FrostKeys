@@ -874,7 +874,7 @@ public class LatinIME extends InputMethodService implements
 
     private String[] getKlipyContentMimeTypes(final String mimeType) {
         if ("image/webp.wasticker".equals(mimeType)) {
-            return new String[]{"image/webp.wasticker", "image/webp"};
+            return new String[]{"image/webp.wasticker", "image/webp", "image/png"};
         }
         return new String[]{mimeType};
     }
@@ -1908,6 +1908,14 @@ public class LatinIME extends InputMethodService implements
             KeyboardSwitcher.getInstance().onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.TEXT_EDIT);
             return;
         }
+        if (event.getKeyCode() == KeyCode.EMOJI) {
+            KeyboardSwitcher.getInstance().onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.EMOJI);
+            return;
+        }
+        if (event.getKeyCode() == KeyCode.CLIPBOARD) {
+            KeyboardSwitcher.getInstance().onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.CLIPBOARD);
+            return;
+        }
         if (event.getKeyCode() == KeyCode.TOGGLE_FLOATING_MODE) {
             KeyboardSwitcher.getInstance().toggleFloatingMode();
             return;
@@ -1939,7 +1947,8 @@ public class LatinIME extends InputMethodService implements
         mKeyboardSwitcher.onEvent(event, getCurrentAutoCapsState(), getCurrentRecapitalizeState());
         if (mSettings.getCurrent().mEmojiKitchenEnabled
                 && helium314.keyboard.latin.emojikitchen.EmojiKitchenHelper.INSTANCE.isEmojiCodePoint(event.getCodePoint())) {
-            tryShowEmojiKitchenSuggestion();
+            final String emojiChar = helium314.keyboard.latin.common.StringUtils.newSingleCodePointString(event.getCodePoint());
+            tryShowEmojiKitchenSuggestion(emojiChar);
         }
     }
 
@@ -1954,7 +1963,7 @@ public class LatinIME extends InputMethodService implements
         mKeyboardSwitcher.onEvent(event, getCurrentAutoCapsState(), getCurrentRecapitalizeState());
         if (mSettings.getCurrent().mEmojiKitchenEnabled
                 && helium314.keyboard.latin.emojikitchen.EmojiKitchenHelper.INSTANCE.containsEmoji(rawText)) {
-            tryShowEmojiKitchenSuggestion();
+            tryShowEmojiKitchenSuggestion(rawText);
         }
     }
 
@@ -2113,9 +2122,16 @@ public class LatinIME extends InputMethodService implements
             mEmojiKitchenDismissedText = ic.getTextBeforeCursor(25, 0);
         }
         removeExternalSuggestions();
+        if (mKeyboardSwitcher != null && mKeyboardSwitcher.getEmojiPalettesView() != null) {
+            mKeyboardSwitcher.getEmojiPalettesView().dismissEmojiKitchen();
+        }
     }
 
     public boolean tryShowEmojiKitchenSuggestion() {
+        return tryShowEmojiKitchenSuggestion(null);
+    }
+
+    public boolean tryShowEmojiKitchenSuggestion(@Nullable final String fallbackText) {
         if (!mSettings.getCurrent().mEmojiKitchenEnabled) {
             return false;
         }
@@ -2123,7 +2139,12 @@ public class LatinIME extends InputMethodService implements
         if (ic == null || !hasSuggestionStripView()) {
             return false;
         }
-        final CharSequence textBeforeCursor = ic.getTextBeforeCursor(25, 0);
+        CharSequence textBeforeCursor = ic.getTextBeforeCursor(25, 0);
+        if (TextUtils.isEmpty(textBeforeCursor)) {
+            textBeforeCursor = fallbackText;
+        } else if (!TextUtils.isEmpty(fallbackText) && !textBeforeCursor.toString().endsWith(fallbackText)) {
+            textBeforeCursor = textBeforeCursor.toString() + fallbackText;
+        }
         if (TextUtils.isEmpty(textBeforeCursor)) {
             return false;
         }
