@@ -35,6 +35,7 @@ import android.graphics.drawable.RippleDrawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.InsetDrawable;
 import android.content.res.ColorStateList;
+import androidx.core.graphics.ColorUtils;
 import android.widget.FrameLayout;
 import android.view.inputmethod.InputConnection;
 import helium314.keyboard.latin.LatinIME;
