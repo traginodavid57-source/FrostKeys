@@ -614,6 +614,8 @@ class SuggestionStripView(context: Context, attrs: AttributeSet?, defStyle: Int)
         setToolbarVisibility(false)
     }
 
+    fun isExternalSuggestionVisible(): Boolean = isExternalSuggestionVisible
+
     fun setMoreSuggestionsHeight(remainingHeight: Int) {
         layoutHelper.setMoreSuggestionsHeight(remainingHeight)
     }

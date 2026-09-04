@@ -150,6 +150,9 @@ object EmojiKitchenHelper {
                 || (cp in 0x2194..0x21AA)
                 || (cp in 0x2934..0x2935)
                 || (cp in 0x3297..0x3299)
+                || cp == 0xA9 || cp == 0xAE
+                || (cp in 0x203C..0x2049)
+                || (cp in 0x25A0..0x25FF)
                 || cp == 0xFE0F || cp == 0x200D
     }
 
@@ -183,8 +186,10 @@ object EmojiKitchenHelper {
     private fun findIndexForEmoji(emoji: String): Int? {
         val cp = toCodepoint(emoji)
         emojiToIndex[cp]?.let { return it }
-        val stripped = cp.replace("-fe0f", "")
-        return emojiToIndex[stripped]
+        val strippedFe0f = cp.replace("-fe0f", "")
+        emojiToIndex[strippedFe0f]?.let { return it }
+        val withoutSkinTone = strippedFe0f.replace(Regex("-(1f3fb|1f3fc|1f3fd|1f3fe|1f3ff)"), "")
+        return emojiToIndex[withoutSkinTone]
     }
 
     fun getCombinations(context: Context, emoji: String, limit: Int = 30): List<EmojiKitchenCombo> {
@@ -293,7 +298,7 @@ object EmojiKitchenHelper {
         if (trailingEmojis.size >= 2) {
             val e1 = trailingEmojis[trailingEmojis.size - 2]
             val e2 = trailingEmojis.last()
-            val directCombo = getCombination(context, e1, e2)
+            val directCombo = getCombination(context, e1, e2) ?: getCombination(context, e2, e1)
             if (directCombo != null) {
                 combos.add(directCombo)
             }
@@ -301,6 +306,14 @@ object EmojiKitchenHelper {
             for (c in e2Combos) {
                 if (c.url != directCombo?.url && combos.size < limit) {
                     combos.add(c)
+                }
+            }
+            if (combos.size < limit) {
+                val e1Combos = getCombinations(context, e1, limit)
+                for (c in e1Combos) {
+                    if (combos.none { it.url == c.url } && combos.size < limit) {
+                        combos.add(c)
+                    }
                 }
             }
         } else {
@@ -325,14 +338,25 @@ object EmojiKitchenHelper {
             httpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) return@withContext null
                 val bytes = response.body?.bytes() ?: return@withContext null
-                val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return@withContext null
+                val rawBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return@withContext null
+
+                // WhatsApp strictly requires stickers to be exactly 512x512
+                val bitmap = if (rawBitmap.width != 512 || rawBitmap.height != 512) {
+                    val scaled = Bitmap.createScaledBitmap(rawBitmap, 512, 512, true)
+                    if (scaled !== rawBitmap) {
+                        rawBitmap.recycle()
+                    }
+                    scaled
+                } else {
+                    rawBitmap
+                }
 
                 FileOutputStream(targetFile).use { fos ->
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                        bitmap.compress(Bitmap.CompressFormat.WEBP_LOSSY, 90, fos)
+                        bitmap.compress(Bitmap.CompressFormat.WEBP_LOSSLESS, 100, fos)
                     } else {
                         @Suppress("DEPRECATION")
-                        bitmap.compress(Bitmap.CompressFormat.WEBP, 90, fos)
+                        bitmap.compress(Bitmap.CompressFormat.WEBP, 95, fos)
                     }
                 }
                 bitmap.recycle()
@@ -345,7 +369,13 @@ object EmojiKitchenHelper {
     }
 
     fun getStickerContentUri(context: Context, file: File): Uri {
-        return "content://${context.packageName}.stickercontentprovider/stickers/emojikitchen/${file.name}".toUri()
+        return try {
+            val authority = "${context.packageName}.fileprovider"
+            androidx.core.content.FileProvider.getUriForFile(context, authority, file)
+        } catch (e: Exception) {
+            Log.e(TAG, "FileProvider failed, falling back to stickercontentprovider", e)
+            "content://${context.packageName}.stickercontentprovider/stickers/emojikitchen/${file.name}".toUri()
+        }
     }
 
     fun commitSticker(
@@ -366,8 +396,17 @@ object EmojiKitchenHelper {
                 val contentUri = getStickerContentUri(context, stickerFile)
                 val committed = latinIME.commitKlipyContent(contentUri, "Emoji Kitchen", "image/webp.wasticker")
                 if (committed) {
-                    if (charsCountToDelete > 0) {
-                        latinIME.currentInputConnection?.deleteSurroundingText(charsCountToDelete, 0)
+                    val ic = latinIME.currentInputConnection
+                    val currentText = ic?.getTextBeforeCursor(25, 0)
+                    val actualTrailingCount = if (currentText != null) {
+                        val (trailing, count) = findTrailingEmojis(currentText)
+                        if (trailing.isNotEmpty()) count else 0
+                    } else {
+                        0
+                    }
+                    val countToDelete = if (actualTrailingCount > 0) actualTrailingCount else charsCountToDelete
+                    if (countToDelete > 0) {
+                        ic?.deleteSurroundingText(countToDelete, 0)
                     }
                     latinIME.removeExternalSuggestions()
                     helium314.keyboard.keyboard.KeyboardSwitcher.getInstance().emojiPalettesView?.dismissEmojiKitchen()

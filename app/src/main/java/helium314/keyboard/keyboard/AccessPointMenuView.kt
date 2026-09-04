@@ -177,7 +177,11 @@ class AccessPointMenuView @JvmOverloads constructor(
                                 switcher.klipyPalettesView?.selectTab("STICKER")
                             }
                         } else {
-                            switcher.onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.EMOJI)
+                            if (!switcher.isShowingEmojiPalettes) {
+                                switcher.onToggleKeyboard(KeyboardSwitcher.KeyboardSwitchState.EMOJI)
+                            } else {
+                                switcher.emojiPalettesView?.initEmojiKitchenOnStart()
+                            }
                             Toast.makeText(context, "Criador de figurinhas (Emoji Kitchen) ativo! Selecione emojis abaixo.", Toast.LENGTH_LONG).show()
                         }
                         return@setOnClickListener

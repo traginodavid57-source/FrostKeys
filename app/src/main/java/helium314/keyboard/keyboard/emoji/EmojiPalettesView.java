@@ -42,6 +42,7 @@ import helium314.keyboard.latin.LatinIME;
 import helium314.keyboard.latin.emojikitchen.EmojiKitchenHelper;
 import helium314.keyboard.latin.emojikitchen.EmojiKitchenSuggestionView;
 import helium314.keyboard.latin.emojikitchen.TextCombosResult;
+import kotlin.Pair;
 
 
 import androidx.annotation.NonNull;
@@ -118,6 +119,7 @@ public final class EmojiPalettesView extends LinearLayout
     private final EmojiCategory mEmojiCategory;
     private RecyclerView mPager;
     private FrameLayout mEmojiKitchenContainer;
+    private String mLastEmojiTapped = null;
     private MainKeyboardView mBottomRowKeyboard;
     private View mSearchBarContainer;
     private ImageButton mSearchBackButton;
@@ -461,11 +463,11 @@ public final class EmojiPalettesView extends LinearLayout
         }
         mKeyboardActionListener.onReleaseKey(code, false);
         updateEmojiKitchen(key);
-        if (Settings.getValues().mAlphaAfterEmojiInEmojiView)
+        if (Settings.getValues().mAlphaAfterEmojiInEmojiView && !Settings.getValues().mEmojiKitchenEnabled)
             mKeyboardActionListener.onCodeInput(KeyCode.ALPHA, NOT_A_COORDINATE, NOT_A_COORDINATE, false);
     }
 
-    private void initEmojiKitchenOnStart() {
+    public void initEmojiKitchenOnStart() {
         if (mEmojiKitchenContainer == null || !Settings.getValues().mEmojiKitchenEnabled) {
             if (mEmojiKitchenContainer != null) mEmojiKitchenContainer.setVisibility(View.GONE);
             return;
@@ -478,12 +480,13 @@ public final class EmojiPalettesView extends LinearLayout
         final InputConnection ic = latinIme.getCurrentInputConnection();
         if (ic != null) {
             final CharSequence text = ic.getTextBeforeCursor(25, 0);
-            if (text != null && text.length() > 0) {
+            if (text != null && text.length() > 0 && EmojiKitchenHelper.INSTANCE.containsEmoji(text)) {
                 showEmojiKitchenForText(text.toString());
                 return;
             }
         }
-        mEmojiKitchenContainer.setVisibility(View.GONE);
+        // If no trailing emoji in input field, show default popular sticker shelf (e.g. for 😂)
+        showEmojiKitchenForText("😂");
     }
 
     public void updateEmojiKitchen(final Key key) {
@@ -497,14 +500,33 @@ public final class EmojiPalettesView extends LinearLayout
         final String currentEmoji = (key.getCode() == KeyCode.MULTIPLE_CODE_POINTS && key.getOutputText() != null)
                 ? key.getOutputText()
                 : (key.getCode() > 0 ? helium314.keyboard.latin.common.StringUtils.newSingleCodePointString(key.getCode()) : null);
+        if (currentEmoji == null) return;
+
+        final String baseText = (textBeforeCursor != null) ? textBeforeCursor.toString() : "";
+        final Pair<List<String>, Integer> trailing = EmojiKitchenHelper.INSTANCE.findTrailingEmojis(baseText);
+        final List<String> trailingList = trailing.getFirst();
+
         final String evalText;
-        if (textBeforeCursor != null && textBeforeCursor.length() > 0) {
-            evalText = textBeforeCursor.toString();
-        } else if (currentEmoji != null) {
-            evalText = currentEmoji;
+        if (trailingList.isEmpty()) {
+            evalText = baseText + currentEmoji;
+        } else if (trailingList.size() == 1) {
+            if (baseText.endsWith(currentEmoji)) {
+                if (currentEmoji.equals(mLastEmojiTapped)) {
+                    evalText = baseText + currentEmoji;
+                } else {
+                    evalText = baseText;
+                }
+            } else {
+                evalText = baseText + currentEmoji;
+            }
         } else {
-            return;
+            if (baseText.endsWith(currentEmoji)) {
+                evalText = baseText;
+            } else {
+                evalText = baseText + currentEmoji;
+            }
         }
+        mLastEmojiTapped = currentEmoji;
         showEmojiKitchenForText(evalText);
     }
 
@@ -522,8 +544,17 @@ public final class EmojiPalettesView extends LinearLayout
             return;
         }
         mEmojiKitchenContainer.removeAllViews();
+        final InputConnection ic = latinIme.getCurrentInputConnection();
+        final CharSequence currentBeforeCursor = ic != null ? ic.getTextBeforeCursor(25, 0) : null;
+        final int deleteCount;
+        if (currentBeforeCursor != null && currentBeforeCursor.length() > 0
+                && EmojiKitchenHelper.INSTANCE.findTrailingEmojis(currentBeforeCursor).getFirst().size() > 0) {
+            deleteCount = EmojiKitchenHelper.INSTANCE.findTrailingEmojis(currentBeforeCursor).getSecond();
+        } else {
+            deleteCount = 0;
+        }
         final EmojiKitchenSuggestionView view = new EmojiKitchenSuggestionView(
-                getContext(), latinIme, result.getEmojis(), result.getCombos(), result.getCharsCount()
+                getContext(), latinIme, result.getEmojis(), result.getCombos(), deleteCount
         );
         mEmojiKitchenContainer.addView(view);
         mEmojiKitchenContainer.setVisibility(View.VISIBLE);

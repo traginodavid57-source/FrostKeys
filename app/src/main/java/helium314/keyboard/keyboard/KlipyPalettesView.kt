@@ -754,7 +754,11 @@ class KlipyPalettesView @JvmOverloads constructor(
 
                     if (cachedFile != null) {
                         if (sendAsSticker) {
-                            val contentUri = "content://${context.packageName}.stickercontentprovider/stickers/klipy/${cachedFile.name}".toUri()
+                            val contentUri = try {
+                                androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", cachedFile)
+                            } catch (e: Exception) {
+                                "content://${context.packageName}.stickercontentprovider/stickers/klipy/${cachedFile.name}".toUri()
+                            }
                             getLatinIME()?.commitKlipyContent(contentUri, if (isSticker) "Sticker" else "GIF", "image/webp.wasticker")
                         } else {
                             sendNormalGif(cachedFile)
@@ -773,7 +777,11 @@ class KlipyPalettesView @JvmOverloads constructor(
                         val label = if (isSticker) "Sticker" else "GIF"
 
                         try {
-                            val contentUri = "content://${context.packageName}.stickercontentprovider/stickers/klipy/${processedFile.name}".toUri()
+                            val contentUri = try {
+                                androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", processedFile)
+                            } catch (e: Exception) {
+                                "content://${context.packageName}.stickercontentprovider/stickers/klipy/${processedFile.name}".toUri()
+                            }
                             getLatinIME()?.commitKlipyContent(contentUri, label, mimeType)
                         } catch (e: Exception) {
                             Log.e("KlipyPalettesView", "Failed to get URI for file", e)

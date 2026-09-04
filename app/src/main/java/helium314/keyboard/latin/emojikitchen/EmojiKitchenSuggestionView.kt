@@ -60,6 +60,7 @@ class EmojiKitchenSuggestionView(
                 AudioAndHapticFeedbackManager.getInstance()
                     .performHapticAndAudioFeedback(KeyCode.NOT_SPECIFIED, it, HapticEvent.KEY_PRESS)
                 latinIME.dismissEmojiKitchenSuggestion()
+                helium314.keyboard.keyboard.KeyboardSwitcher.getInstance().emojiPalettesView?.dismissEmojiKitchen()
             }
         }
         addView(closeButton)
@@ -84,7 +85,8 @@ class EmojiKitchenSuggestionView(
         val itemSize = 44.dpToPx(resources)
         val itemMargin = 3.dpToPx(resources)
 
-        for (combo in combos) {
+        for ((index, combo) in combos.withIndex()) {
+            val isDirectMix = emojis.size >= 2 && index == 0
             val itemContainer = FrameLayout(context).apply {
                 layoutParams = LayoutParams(itemSize, itemSize).apply {
                     setMargins(itemMargin, 0, itemMargin, 0)
@@ -95,8 +97,13 @@ class EmojiKitchenSuggestionView(
                 val shape = GradientDrawable().apply {
                     cornerRadius = 8.dpToPx(resources).toFloat()
                     val isDark = ColorUtils.calculateLuminance(colors.get(ColorType.MAIN_BACKGROUND)) < 0.5
-                    setColor(if (isDark) Color.argb(35, 255, 255, 255) else Color.argb(25, 0, 0, 0))
-                    setStroke(1.dpToPx(resources), if (isDark) Color.argb(55, 255, 255, 255) else Color.argb(35, 0, 0, 0))
+                    if (isDirectMix) {
+                        setColor(if (isDark) Color.argb(60, 255, 255, 255) else Color.argb(45, 0, 0, 0))
+                        setStroke(2.dpToPx(resources), colors.get(ColorType.ACTION_KEY_BACKGROUND))
+                    } else {
+                        setColor(if (isDark) Color.argb(35, 255, 255, 255) else Color.argb(25, 0, 0, 0))
+                        setStroke(1.dpToPx(resources), if (isDark) Color.argb(55, 255, 255, 255) else Color.argb(35, 0, 0, 0))
+                    }
                 }
                 background = shape
             }

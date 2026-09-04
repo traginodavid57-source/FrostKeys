@@ -841,10 +841,12 @@ public class LatinIME extends InputMethodService implements
             return false;
         }
 
+        final String[] matchingMimeTypes = getMatchingContentMimeTypes(supportedMimeTypes, contentMimeTypes);
+
         try {
             final InputContentInfoCompat inputContentInfo = new InputContentInfoCompat(
                     contentUri,
-                    new ClipDescription(description, contentMimeTypes),
+                    new ClipDescription(description, matchingMimeTypes),
                     null
             );
 
@@ -858,18 +860,38 @@ public class LatinIME extends InputMethodService implements
                     InputConnectionCompat.INPUT_CONTENT_GRANT_READ_URI_PERMISSION, null);
             if (success) return true;
             Log.w(TAG, "Target rejected rich content: package=" + editorInfo.packageName
-                    + ", sentMimeTypes=" + Arrays.toString(contentMimeTypes)
+                    + ", sentMimeTypes=" + Arrays.toString(matchingMimeTypes)
                     + ", supportedMimeTypes=" + Arrays.toString(supportedMimeTypes)
                     + ", " + describeRichContentForLog(contentUri));
         } catch (Exception e) {
             Log.e(TAG, "Failed to commit rich content: package=" + editorInfo.packageName
-                    + ", sentMimeTypes=" + Arrays.toString(contentMimeTypes)
+                    + ", sentMimeTypes=" + Arrays.toString(matchingMimeTypes)
                     + ", supportedMimeTypes=" + Arrays.toString(supportedMimeTypes)
                     + ", " + describeRichContentForLog(contentUri), e);
         }
 
         showContentPasteFailedToast();
         return false;
+    }
+
+    private String[] getMatchingContentMimeTypes(final String[] supportedMimeTypes, final String[] contentMimeTypes) {
+        if (supportedMimeTypes == null || supportedMimeTypes.length == 0) {
+            return contentMimeTypes;
+        }
+        final ArrayList<String> matching = new ArrayList<>();
+        for (String contentMimeType : contentMimeTypes) {
+            for (String supportedMimeType : supportedMimeTypes) {
+                if (ClipDescription.compareMimeTypes(contentMimeType, supportedMimeType)) {
+                    if (!matching.contains(contentMimeType)) {
+                        matching.add(contentMimeType);
+                    }
+                }
+            }
+        }
+        if (matching.isEmpty()) {
+            return contentMimeTypes;
+        }
+        return matching.toArray(new String[0]);
     }
 
     private String[] getKlipyContentMimeTypes(final String mimeType) {
@@ -2044,6 +2066,17 @@ public class LatinIME extends InputMethodService implements
                 || suggestedWords.isPunctuationSuggestions()
                 || isEmptyApplicationSpecifiedCompletions;
 
+        // Do not overwrite Emoji Kitchen suggestions if trailing emojis exist
+        if (currentSettingsValues.mEmojiKitchenEnabled && mSuggestionStripView.isExternalSuggestionVisible()) {
+            final InputConnection ic = getCurrentInputConnection();
+            if (ic != null) {
+                final CharSequence text = ic.getTextBeforeCursor(25, 0);
+                if (helium314.keyboard.latin.emojikitchen.EmojiKitchenHelper.INSTANCE.containsEmoji(text)) {
+                    return;
+                }
+            }
+        }
+
         if (currentSettingsValues.isSuggestionsEnabledPerUserSettings()
                 || currentSettingsValues.isApplicationSpecifiedCompletionsOn()
                 // We should clear the contextual strip if there is no suggestion from
@@ -2062,6 +2095,17 @@ public class LatinIME extends InputMethodService implements
     public void setSuggestions(final SuggestedWords suggestedWords) {
         if (mIsDestroyed) {
             return;
+        }
+        if (mSettings.getCurrent().mEmojiKitchenEnabled) {
+            final InputConnection ic = getCurrentInputConnection();
+            if (ic != null) {
+                final CharSequence text = ic.getTextBeforeCursor(25, 0);
+                if (helium314.keyboard.latin.emojikitchen.EmojiKitchenHelper.INSTANCE.containsEmoji(text)) {
+                    if (tryShowEmojiKitchenSuggestion()) {
+                        return;
+                    }
+                }
+            }
         }
         if (suggestedWords.isEmpty()) {
             // avoids showing clipboard suggestion when starting gesture typing
@@ -2097,6 +2141,10 @@ public class LatinIME extends InputMethodService implements
                 mKeyboardSwitcher.getCurrentKeyboardScript(),
                 mHandler);
         updateStateAfterInputTransaction(completeInputTransaction);
+        if (mSettings.getCurrent().mEmojiKitchenEnabled && suggestionInfo != null
+                && helium314.keyboard.latin.emojikitchen.EmojiKitchenHelper.INSTANCE.containsEmoji(suggestionInfo.mWord)) {
+            tryShowEmojiKitchenSuggestion(suggestionInfo.mWord);
+        }
     }
 
     /**
@@ -2176,13 +2224,13 @@ public class LatinIME extends InputMethodService implements
     @Override
     public void setNeutralSuggestionStrip() {
         final SettingsValues currentSettings = mSettings.getCurrent();
-        if (tryShowClipboardSuggestion()) {
-            // clipboard suggestion has been set
+        if (currentSettings.mEmojiKitchenEnabled && tryShowEmojiKitchenSuggestion()) {
             if (hasSuggestionStripView() && currentSettings.mAutoHideToolbar)
                 mSuggestionStripView.setToolbarVisibility(false);
             return;
         }
-        if (tryShowEmojiKitchenSuggestion()) {
+        if (tryShowClipboardSuggestion()) {
+            // clipboard suggestion has been set
             if (hasSuggestionStripView() && currentSettings.mAutoHideToolbar)
                 mSuggestionStripView.setToolbarVisibility(false);
             return;

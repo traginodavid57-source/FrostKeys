@@ -2,4 +2,6 @@
 <paths>
     <cache-path name="cache" path="." />
     <cache-path name="klipy" path="klipy/"/>
+    <files-path name="stickers" path="stickers/"/>
+    <files-path name="files" path="."/>
 </paths>
