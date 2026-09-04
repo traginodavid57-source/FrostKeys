@@ -764,7 +764,7 @@ object KeyBackgroundUtils {
     @ColorInt
     fun fillColorFor(colors: Colors, color: ColorType, pressed: Boolean = false): Int {
         if (pressed) return colors.getPressed(color)
-        if (colors.hasKeyBorders) return colors.get(color)
+        if (colors.isFrosted || colors.isLiquidGlass || colors.hasKeyBorders) return colors.get(color)
         return when (color) {
             KEY_BACKGROUND, FUNCTIONAL_KEY_BACKGROUND -> Color.TRANSPARENT
             else -> colors.get(color)

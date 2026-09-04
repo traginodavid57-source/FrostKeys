@@ -461,11 +461,12 @@ public class KeyboardView extends View {
                 final RectF circleRect = new RectF((bgWidth - targetBgHeight) * 0.5f, yOffset, (bgWidth + targetBgHeight) * 0.5f, yOffset + targetBgHeight);
                 LiquidGlassHelper.INSTANCE.drawLiquidGlassKey(canvas, circleRect, circleRadius, baseColor, key.isPressed() || key.isLocked(), intensity, true);
             } else if (isRoundedStyle) {
-                final float cornerRadius = bgHeight * 0.5f;
+                final float density = getResources().getDisplayMetrics().density;
+                final float cornerRadius = isSpaceBar ? bgHeight * 0.5f : Math.min(bgHeight * 0.25f, 9.0f * density);
                 LiquidGlassHelper.INSTANCE.drawLiquidGlassKey(canvas, rect, cornerRadius, baseColor, key.isPressed() || key.isLocked(), intensity, false);
             } else {
                 final float density = getResources().getDisplayMetrics().density;
-                final float cornerRadius = 11.0f * density;
+                final float cornerRadius = 6.5f * density;
                 LiquidGlassHelper.INSTANCE.drawLiquidGlassKey(canvas, rect, cornerRadius, baseColor, key.isPressed() || key.isLocked(), intensity, false);
             }
             canvas.translate(-bgX, -bgY);
